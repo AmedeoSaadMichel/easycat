@@ -1,0 +1,12 @@
+[package]
+name = "easycut-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "easycut"
+path = "src/main.rs"
+
+[dependencies]
+easycut-core = { path = "../easycut-core" }
+clap = { version = "4", features = ["derive"] }
