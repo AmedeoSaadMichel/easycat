@@ -1,0 +1,82 @@
+name: Windows and Linux packages
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing preview release to receive the packages
+        required: true
+        default: v0.1.0-preview.1
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            platform: windows
+          - os: ubuntu-22.04
+            platform: linux
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Linux build and display dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libasound2-dev libudev-dev xvfb scrot
+      - name: Rust toolchain
+        run: rustup update stable --no-self-update
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/debug
+            target/release
+          key: native-v1-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+      - name: Prepare verified FFmpeg tools
+        run: python scripts/package_portable.py prepare ${{ matrix.platform }}
+      - name: Unit and integration tests
+        run: cargo test --workspace --locked
+      - name: Build release binaries
+        run: cargo build --workspace --release --locked
+      - name: Package and test bundled export tools
+        run: python scripts/package_portable.py package ${{ matrix.platform }}
+      - name: Linux packaged GUI smoke test
+        if: runner.os == 'Linux'
+        run: xvfb-run -a -s "-screen 0 1440x1000x24" python scripts/smoke_linux_gui.py
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux'
+        with:
+          name: easycat-linux-preview
+          path: |
+            target/linux-preview.png
+            target/linux-gui.log
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: easycat-package-${{ matrix.platform }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+  publish:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+          pattern: easycat-package-*
+      - name: Upload verified packages to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: gh release upload "$RELEASE_TAG" dist/* --clobber

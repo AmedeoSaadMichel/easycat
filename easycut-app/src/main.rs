@@ -1,7 +1,12 @@
 // File: easycut-app/src/main.rs
+#![cfg_attr(
+    all(target_os = "windows", not(debug_assertions)),
+    windows_subsystem = "windows"
+)]
 mod app;
 mod controls;
 mod panels;
+mod runtime;
 mod theme;
 mod timeline;
 mod video;
@@ -12,6 +17,7 @@ mod worker;
 use std::path::PathBuf;
 
 fn main() -> eframe::Result {
+    runtime::configure_packaged_tools();
     let options = eframe::NativeOptions {
         viewport: window_chrome::viewport(),
         centered: true,

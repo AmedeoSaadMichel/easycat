@@ -480,6 +480,7 @@ mod tests {
         );
     }
 
+    #[cfg(target_os = "macos")]
     #[test]
     fn hardware_pipeline_rotates_and_scales() {
         let mut s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));

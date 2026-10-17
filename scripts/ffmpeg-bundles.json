@@ -1,0 +1,12 @@
+{
+  "upstream": "https://github.com/BtbN/FFmpeg-Builds",
+  "release": "autobuild-2026-10-16-13-04",
+  "windows": {
+    "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-16-13-04/ffmpeg-n9.0.2-28-g669f5ab083-win64-gpl-shared-9.0.zip",
+    "sha256": "98c58ed180b819ebaf46d6ce1712dcfb05a79b95de0c786a5d996ebf86678bf9"
+  },
+  "linux": {
+    "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-16-13-04/ffmpeg-n9.0.2-28-g669f5ab083-linux64-gpl-shared-9.0.tar.xz",
+    "sha256": "7f459e4f8d609809b0eab3b8c01279cbae81df695bd85c434860b992fd767905"
+  }
+}
