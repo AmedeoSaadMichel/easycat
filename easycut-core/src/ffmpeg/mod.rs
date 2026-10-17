@@ -101,6 +101,17 @@ pub fn run_with_progress(
     Err(first_err.unwrap_or(Error::Cancelled))
 }
 
+/// FFmpeg timestamps may briefly regress while reordered frames are flushed.
+fn report_progress(value: f64, last: &mut f64, progress: &mut dyn FnMut(f64)) {
+    if value.is_finite() {
+        let value = value.clamp(0.0, 1.0);
+        if value > *last {
+            *last = value;
+            progress(value);
+        }
+    }
+}
+
 fn run_once(
     job: &Job,
     info: &VideoInfo,
@@ -133,6 +144,7 @@ fn run_once(
         s
     });
     let stdout = child.stdout.take().expect("stdout is piped");
+    let mut last_progress = 0.0;
     for line in BufReader::new(stdout).lines().map_while(|l| l.ok()) {
         if cancel.load(Ordering::Relaxed) {
             let _ = child.kill();
@@ -143,7 +155,7 @@ fn run_once(
             .and_then(|v| v.trim().parse::<f64>().ok())
         {
             if duration > 0.0 {
-                progress((us / 1e6 / duration).clamp(0.0, 1.0));
+                report_progress(us / 1e6 / duration, &mut last_progress, progress);
             }
         }
     }
@@ -300,6 +312,16 @@ pub fn measure_size(
 mod tests {
     use super::*;
     use crate::job::Mode;
+
+    #[test]
+    fn reordered_timestamps_do_not_move_progress_backwards() {
+        let mut last = 0.0;
+        let mut reported = Vec::new();
+        for value in [0.0, 0.4, 0.3, f64::NAN, 0.6, 0.59, 1.1] {
+            report_progress(value, &mut last, &mut |value| reported.push(value));
+        }
+        assert_eq!(reported, vec![0.4, 0.6, 1.0]);
+    }
 
     #[test]
     fn running_sample_cancels_without_waiting_for_completion() {
