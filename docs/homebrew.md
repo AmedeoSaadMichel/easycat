@@ -6,16 +6,14 @@ Requirements: an Apple Silicon Mac, macOS 15 Sequoia or later, and Homebrew. Thi
 
 ## Install
 
-The current tap points to the private development repository. Public downloads will move to a separate distribution repository; see [private-code distribution](private-code-distribution.md). The commands below show the existing private tap. Public users must use the new tap URL from the generated distribution README:
+The public distribution repository contains the project-maintained cask. Add it once:
 
 ```sh
-brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycut.git
+brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycat-releases.git
 brew install --cask easycat
 ```
 
-The explicit repository URL is required because the repository is named `easycut`, rather than Homebrew's conventional `homebrew-easycat`. This is a project-maintained tap, not a listing in the official Homebrew cask repository.
-
-While the repository is private, the public installation commands cannot download the release anonymously. Use the authenticated GitHub release download described on the [download page](../DOWNLOADS.md) instead.
+If you previously added the private development tap, run `brew untap AmedeoSaadMichel/easycat` first, then add the public URL above. The explicit URL is required because the repository is named `easycat-releases`. This is a personal tap, not a listing in the official Homebrew catalog.
 
 This preview has an ad-hoc signature and is not notarized with Apple. Homebrew installation does not change that: macOS may require approval through System Settings > Privacy & Security. Do not disable Gatekeeper system-wide.
 
@@ -37,10 +35,10 @@ brew untap amedeosaadmichel/easycat
 
 ## Maintaining the cask
 
-Update `Casks/easycat.rb` only after uploading and validating a new macOS release. Set `version` to `APP_VERSION,PREVIEW_SUFFIX` (currently `0.1.0,preview.1`); the URL uses these values for the release tag and DMG filename. Replace `sha256` with the checksum of the actual published DMG. Never replace an existing release asset without also updating its checksum.
+Update `Casks/easycat.rb` only after uploading and validating a new macOS release. Set `version` to `APP_VERSION,PREVIEW_SUFFIX` (currently `0.1.0,preview.2`); the URL uses these values for the release tag and DMG filename. Replace `sha256` with the checksum of the actual published DMG. Never replace an existing release asset without also updating its checksum.
 
 The cask deliberately skips automatic release discovery: preview updates must be checked before changing the pinned version. Keep the architecture and minimum macOS requirement aligned with the packaged application's `Info.plist`. Validate changes with Homebrew's cask loader and `brew style Casks/easycat.rb`, then verify the downloaded DMG against the pinned SHA-256.
 
 ## Official catalog submission
 
-See the [official Homebrew submission preparation and outstanding requirements](homebrew-submission.md). The current private, ad-hoc signed preview is not ready for the official catalog.
+See the [official Homebrew submission preparation and outstanding requirements](homebrew-submission.md). The current ad-hoc signed preview is not ready for the official catalog.
