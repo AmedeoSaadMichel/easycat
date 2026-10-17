@@ -6,6 +6,14 @@ on:
         description: Existing preview release to receive the packages
         required: true
         default: v0.1.0-preview.1
+      platform:
+        description: Platforms to build
+        type: choice
+        options:
+          - both
+          - windows
+          - linux
+        default: both
 permissions:
   contents: read
 jobs:
@@ -13,11 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-2022
-            platform: windows
-          - os: ubuntu-22.04
-            platform: linux
+        include: ${{ fromJSON(inputs.platform == 'windows' && '[{"os":"windows-2022","platform":"windows"}]' || inputs.platform == 'linux' && '[{"os":"ubuntu-22.04","platform":"linux"}]' || '[{"os":"windows-2022","platform":"windows"},{"os":"ubuntu-22.04","platform":"linux"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
@@ -47,6 +51,8 @@ jobs:
       - name: Unit and integration tests
         run: cargo test --workspace --locked
       - name: Build release binaries
+        env:
+          RUSTFLAGS: ${{ runner.os == 'Windows' && '-C target-feature=+crt-static' || '' }}
         run: cargo build --workspace --release --locked
       - name: Package and test bundled export tools
         run: python scripts/package_portable.py package ${{ matrix.platform }}

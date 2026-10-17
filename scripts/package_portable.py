@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 import shutil
 import subprocess
+import struct
 import sys
 import tarfile
 import urllib.request
@@ -61,6 +62,28 @@ def prepare(platform):
     print('FFmpeg prepared:', vendor, flush=True)
 
 
+def windows_imports(path):
+    """Read PE imports to verify the app needs no external Visual C++ runtime."""
+    data = path.read_bytes()
+    pe = struct.unpack_from('<I', data, 0x3c)[0]
+    count = struct.unpack_from('<H', data, pe + 6)[0]
+    optional_size = struct.unpack_from('<H', data, pe + 20)[0]
+    optional = pe + 24
+    sections = [struct.unpack_from('<IIII', data, optional + optional_size + i * 40 + 8) for i in range(count)]
+    def offset(rva):
+        for virtual_size, address, raw_size, raw in sections:
+            if address <= rva < address + max(virtual_size, raw_size):
+                return raw + rva - address
+        raise RuntimeError(f'Invalid PE address: {rva}')
+    cursor = offset(struct.unpack_from('<I', data, optional + 120)[0])
+    imports = []
+    while any(data[cursor:cursor + 20]):
+        start = offset(struct.unpack_from('<I', data, cursor + 12)[0])
+        imports.append(data[start:data.index(0, start)].decode('ascii'))
+        cursor += 20
+    return imports
+
+
 def bundle_keyboard_libraries(stage, licenses):
     """X11 keyboard support is loaded dynamically and is not visible in ldd of Rust."""
     library = Path('/usr/lib/x86_64-linux-gnu/libxkbcommon-x11.so.0')
@@ -102,6 +125,11 @@ def package(platform):
         shutil.copytree(vendor / 'lib', stage / 'lib', symlinks=True)
     binary = stage / ('easycat.exe' if platform == 'windows' else 'easycat-bin')
     shutil.copy2(TARGET / 'release' / ('easycut-app' + suffix), binary)
+    if platform == 'windows':
+        imports = windows_imports(binary)
+        if any(name.lower().startswith(('vcruntime', 'msvcp')) for name in imports):
+            raise RuntimeError(f'App requires an unbundled Visual C++ runtime: {imports}')
+        (stage / 'windows-imports.json').write_text(json.dumps(imports, indent=2) + '\n')
     shutil.copy2(ROOT / 'easycut-app/assets/app-icon.png', stage / 'easycat.png')
     (stage / 'build-info.json').write_text(json.dumps({
         'version': VERSION,
