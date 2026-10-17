@@ -27,10 +27,11 @@ jobs:
           python-version: '3.12'
       - name: Linux build and display dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libasound2-dev libudev-dev xvfb scrot
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libxinerama-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libgl1-mesa-dev libasound2-dev libudev-dev xvfb scrot
       - name: Rust toolchain
         run: rustup update stable --no-self-update
       - uses: actions/cache@v4
+        id: rust-cache
         with:
           path: |
             ~/.cargo/registry
@@ -50,7 +51,7 @@ jobs:
         if: runner.os == 'Linux'
         run: xvfb-run -a -s "-screen 0 1440x1000x24" python scripts/smoke_linux_gui.py
       - uses: actions/upload-artifact@v4
-        if: runner.os == 'Linux'
+        if: always() && runner.os == 'Linux'
         with:
           name: easycat-linux-preview
           path: |
@@ -63,6 +64,15 @@ jobs:
           path: dist/*
           if-no-files-found: error
           retention-days: 14
+      - uses: actions/cache/save@v4
+        if: always() && !cancelled() && steps.rust-cache.outputs.cache-hit != 'true'
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/debug
+            target/release
+          key: native-v1-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
   publish:
     needs: build
     runs-on: ubuntu-22.04

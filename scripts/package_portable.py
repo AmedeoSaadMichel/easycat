@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -60,6 +61,35 @@ def prepare(platform):
     print('FFmpeg prepared:', vendor, flush=True)
 
 
+def bundle_keyboard_libraries(stage, licenses):
+    """X11 keyboard support is loaded dynamically and is not visible in ldd of Rust."""
+    library = Path('/usr/lib/x86_64-linux-gnu/libxkbcommon-x11.so.0')
+    queue = [library]
+    seen = set()
+    records = []
+    core = ('libc.so', 'libm.so', 'libpthread.so', 'libdl.so', 'librt.so', 'libresolv.so')
+    for source in queue:
+        if source.name in seen or source.name.startswith(core):
+            continue
+        seen.add(source.name)
+        destination = stage / 'lib' / source.name
+        if not destination.exists():
+            shutil.copy2(source.resolve(strict=True), destination)
+        linked = subprocess.check_output(['ldd', str(source)], text=True)
+        if 'not found' in linked:
+            raise RuntimeError(linked)
+        for path in re.findall(r'=> (/[^ ]+)', linked):
+            queue.append(Path(path))
+        owner = subprocess.check_output(['dpkg-query', '-S', '*/' + source.resolve().name], text=True).split(': ', 1)[0]
+        package_name = owner.split(':')[0]
+        copyright_file = Path('/usr/share/doc') / package_name / 'copyright'
+        if copyright_file.exists():
+            shutil.copy2(copyright_file, licenses / (package_name + '-copyright.txt'))
+        records.append({'library': source.name, 'package': owner, 'sha256': hashlib.sha256(destination.read_bytes()).hexdigest()})
+    (stage / 'lib/libxkbcommon-x11.so').symlink_to('libxkbcommon-x11.so.0')
+    (licenses / 'system-libraries.json').write_text(json.dumps(records, indent=2) + '\n')
+
+
 def package(platform):
     suffix = '.exe' if platform == 'windows' else ''
     name = f'easycat-{VERSION}-' + ('windows-x64' if platform == 'windows' else 'linux-x86_64')
@@ -91,6 +121,8 @@ def package(platform):
     for item in (ROOT / 'easycut-app/assets').glob('*OFL.txt'):
         shutil.copy2(item, licenses / item.name)
     shutil.copy2(ROOT / 'scripts/ffmpeg-bundles.json', licenses / 'ffmpeg-source.json')
+    if platform == 'linux':
+        bundle_keyboard_libraries(stage, licenses)
     if platform == 'linux':
         launcher = stage / 'easycat'
         launcher.write_text('''#!/bin/sh
