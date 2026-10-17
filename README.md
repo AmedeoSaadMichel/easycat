@@ -10,7 +10,7 @@ A local Rust desktop app for trimming and compressing videos, with a cosmic nati
 
 Preview downloads are available for macOS Apple Silicon, Windows x64 and Linux x86_64. Intel Mac packages are not available yet. See the download page for requirements, installation steps and validation limits.
 
-Install the macOS Apple Silicon preview through the [project Homebrew tap](docs/homebrew.md) once this repository is public.
+Install the macOS Apple Silicon preview through the [project Homebrew tap](docs/homebrew.md) once this repository is public. Preparation for the official catalog is tracked in the [Homebrew submission checklist](docs/homebrew-submission.md).
 
 ## Run
 
