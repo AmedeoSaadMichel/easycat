@@ -31,6 +31,8 @@ def prepare_notices(destination, metadata=None):
         for path in sorted(source.rglob('*')):
             if not path.is_file() or path.is_symlink():
                 continue
+            if path.suffix.lower() in ('.rs', '.c', '.cpp', '.h', '.py', '.js'):
+                continue
             if not path.name.upper().startswith(('LICENSE', 'LICENCE', 'COPYING', 'COPYRIGHT', 'NOTICE', 'AUTHORS')):
                 continue
             relative = path.relative_to(source)

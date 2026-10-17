@@ -21,6 +21,7 @@ class DistributionTests(unittest.TestCase):
             crate.mkdir(parents=True)
             (crate / 'Cargo.toml').write_text('fixture')
             (crate / 'LICENSE').write_text('Public upstream notice')
+            (crate / 'copying.rs').write_text('Third-party implementation, not a license notice')
             private = root / 'easycat-private.rs'
             private.write_text('PRIVATE_EASYCAT_SOURCE_SENTINEL')
             (crate / 'LICENSE-link').symlink_to(private)

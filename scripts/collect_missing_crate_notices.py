@@ -24,6 +24,8 @@ def collect(item):
                 relative = Path(*Path(member.name).parts[1:])
                 if not member.isfile() or relative.is_absolute() or '..' in relative.parts:
                     continue
+                if relative.suffix.lower() in ('.rs', '.c', '.cpp', '.h', '.py', '.js'):
+                    continue
                 if not relative.name.upper().startswith(('LICENSE', 'LICENCE', 'COPYING', 'COPYRIGHT', 'NOTICE', 'AUTHORS')):
                     continue
                 target = OUT / (repository.replace('/', '_') + '-' + revision) / relative

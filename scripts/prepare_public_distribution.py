@@ -134,7 +134,7 @@ def main():
     checksums = {file.name: digest(file) for file in assets}
     (output / 'SHA256SUMS').write_text(''.join(f'{checksum}  {name}\n' for name, checksum in sorted(checksums.items())))
     cask = output / 'Casks/easycat.rb'
-    cask.parent.mkdir()
+    cask.parent.mkdir(exist_ok=args.resume)
     text = (ROOT / 'Casks/easycat.rb').read_text()
     text = text.replace('0.1.0,preview.1', '0.1.0,preview.2').replace(ORIGINALS['easycat-0.1.0-macos-arm64.dmg'], checksums[mac_dmg.name])
     text = text.replace('AmedeoSaadMichel/easycut', args.repository).replace('-macos-arm64.dmg', '-macos-arm64-legal-preview.dmg')
