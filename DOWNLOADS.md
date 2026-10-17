@@ -27,6 +27,17 @@ The package includes FFmpeg, ffprobe, ffplay and their required libraries. Homeb
 
 **Preview status:** this build has an ad-hoc signature and is not notarized with Apple. macOS may display a security warning. If you decide to open it, use the normal macOS Privacy & Security controls; do not disable Gatekeeper system-wide. Public release compliance for bundled third-party components is still under review; this is not a stable release.
 
+### Install with Homebrew
+
+On Apple Silicon with macOS 15 or later, once this repository is public:
+
+```sh
+brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycut.git
+brew install --cask amedeosaadmichel/easycat/easycat
+```
+
+[Homebrew requirements, updates and removal](docs/homebrew.md). This installs the same macOS preview and retains the signature limitations above.
+
 ## Install on Windows
 
 1. Download the portable ZIP and extract the entire archive.
