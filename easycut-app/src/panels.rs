@@ -311,7 +311,8 @@ pub fn show(ui: &mut egui::Ui, v: &mut Video) {
                         ui.selectable_value(&mut v.speed, speed, speed.label());
                     }
                 });
-            ui.checkbox(&mut v.hardware, "Hardware acceleration");
+            ui.add_enabled(cfg!(target_os = "macos"), egui::Checkbox::new(&mut v.hardware, "Hardware acceleration"))
+                .on_hover_text("Hardware export is currently available on macOS. Windows and Linux use software encoding.");
         }
     }
 }

@@ -14,8 +14,21 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 
+/// Keep bundled console tools invisible when called by the Windows GUI.
+pub(crate) fn command(program: &str) -> Command {
+    let mut command = Command::new(program);
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    }
+    #[cfg(not(target_os = "windows"))]
+    let _ = &mut command;
+    command
+}
+
 pub(crate) fn run_capture_bytes(program: &'static str, args: &[String]) -> Result<Vec<u8>> {
-    let out = Command::new(program)
+    let out = command(program)
         .args(args)
         .output()
         .map_err(|source| Error::Spawn { program, source })?;
@@ -102,7 +115,7 @@ fn run_once(
         1..1,
         ["-progress".to_string(), "pipe:1".into(), "-nostats".into()],
     );
-    let mut child = Command::new("ffmpeg")
+    let mut child = command("ffmpeg")
         .args(&args)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -158,7 +171,7 @@ fn capture_sample(args: &[String], cancel: &AtomicBool) -> Result<u64> {
     if cancel.load(Ordering::Relaxed) {
         return Err(Error::Cancelled);
     }
-    let mut child = Command::new("ffmpeg")
+    let mut child = command("ffmpeg")
         .args(args)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())

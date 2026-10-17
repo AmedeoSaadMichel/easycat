@@ -5,7 +5,7 @@ use crate::frames::Frame;
 use crate::{Error, Result};
 use std::io::Read;
 use std::path::Path;
-use std::process::{Child, ChildStdout, Command, Stdio};
+use std::process::{Child, ChildStdout, Stdio};
 
 /// RGB frame stream at constant `fps`, starting at `start`.
 /// Dropping the stream terminates FFmpeg.
@@ -25,7 +25,7 @@ impl FrameStream {
         width: usize,
         height: usize,
     ) -> Result<Self> {
-        let mut child = Command::new("ffmpeg")
+        let mut child = crate::ffmpeg::command("ffmpeg")
             .args(["-v", "error", "-ss"])
             .arg(format!("{:.3}", start.max(0.0)))
             .arg("-i")
@@ -77,7 +77,7 @@ pub struct AudioPlayer {
 impl AudioPlayer {
     /// Return `None` if ffplay is unavailable; playback remains muted.
     pub fn spawn(input: &Path, start: f64, duration: f64, volume: u8) -> Option<Self> {
-        let child = Command::new("ffplay")
+        let child = crate::ffmpeg::command("ffplay")
             .args(["-nodisp", "-autoexit", "-vn", "-loglevel", "quiet", "-ss"])
             .arg(format!("{:.3}", start.max(0.0)))
             .args(["-t", &format!("{duration:.3}")])

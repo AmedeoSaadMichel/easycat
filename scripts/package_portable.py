@@ -73,6 +73,14 @@ def package(platform):
     binary = stage / ('easycat.exe' if platform == 'windows' else 'easycat-bin')
     shutil.copy2(TARGET / 'release' / ('easycut-app' + suffix), binary)
     shutil.copy2(ROOT / 'easycut-app/assets/app-icon.png', stage / 'easycat.png')
+    (stage / 'build-info.json').write_text(json.dumps({
+        'version': VERSION,
+        'platform': platform,
+        'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        'workflow_run': os.environ.get('GITHUB_RUN_ID'),
+        'ffmpeg': CONFIG[platform],
+        'ffmpeg_upstream': CONFIG['upstream'],
+    }, indent=2) + '\n')
     licenses = stage / 'Licenses'
     licenses.mkdir()
     for item in vendor.iterdir():

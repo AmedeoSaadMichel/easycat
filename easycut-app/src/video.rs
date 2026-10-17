@@ -75,7 +75,7 @@ impl Video {
             choice: Choice::Copy,
             remux_excluded: Vec::new(),
             target_mb,
-            hardware: true,
+            hardware: cfg!(target_os = "macos"),
             speed: Speed::Balanced,
             out_stem: format!("{stem}_easycat"),
             measured: HashMap::new(),
@@ -282,7 +282,7 @@ mod tests {
         video.end = 30.0;
         assert!(video.invalidate_stale_measures());
         video.measured.insert(0, 42);
-        video.hardware = false;
+        video.hardware = !video.hardware;
         assert!(video.invalidate_stale_measures());
         assert!(video.measured.is_empty());
         let key = video.estimate_key();

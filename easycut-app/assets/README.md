@@ -54,3 +54,5 @@ The current native starting and minimum window size is 1180×850 logical points,
 ## Application icon
 
 `app-icon.png` is a transparent, square mascot icon generated with ImageGen using the existing retina brand atlas as its reference. Prompt: faithfully reproduce only the pink three-eyed cat face, preserving yellow slit-pupil eyes, whiskers, ears, nose, smile and inky contours; no lettering, landscape, panel or shadow; transparent outside the head. The native viewport embeds this icon, and macOS packaging converts it into a multi-resolution ICNS registered in Info.plist.
+
+`app-icon.ico` contains the standard Windows icon representations converted from the mascot PNG. The native Windows build script embeds it into the executable using the installed Windows SDK resource compiler.
