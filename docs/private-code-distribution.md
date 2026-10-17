@@ -1,5 +1,9 @@
 # Distribute easycat while keeping its source private
 
+The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.2). The development repository remains private. The public repository contains only download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
+
+Publication verification: all eight uploaded assets matched local SHA-256 hashes and sizes. All installer and source download URLs were accessible without authentication. The public macOS DMG was downloaded anonymously and matched the cask checksum. Homebrew loaded the public tap and its cask metadata successfully; `brew style` passed. No installation or GUI smoke test was performed during publication.
+
 ## Audit result (2026-10-17)
 
 All three existing easycat preview packages contain **FFmpeg GPL-3.0-or-later**:
