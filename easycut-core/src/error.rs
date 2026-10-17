@@ -3,26 +3,28 @@ use std::path::PathBuf;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("impossibile avviare {program}: {source} (FFmpeg è installato?)")]
+    #[error("could not start {program}: {source} (is FFmpeg installed?)")]
     Spawn {
         program: &'static str,
         source: std::io::Error,
     },
-    #[error("{program} è fallito ({status}):\n{stderr}")]
+    #[error("{program} failed ({status}):\n{stderr}")]
     Failed {
         program: &'static str,
         status: String,
         stderr: String,
     },
-    #[error("output di ffprobe non valido: {0}")]
+    #[error("invalid ffprobe output: {0}")]
     BadProbe(String),
-    #[error("file di origine non trovato: {0}")]
+    #[error("source file not found: {0}")]
     MissingInput(PathBuf),
-    #[error("il file di output coincide con l'origine: {0}")]
+    #[error("output file is the source file: {0}")]
     OutputIsInput(PathBuf),
-    #[error("intervallo di taglio non valido: {0}")]
+    #[error("invalid trim range: {0}")]
     BadRange(String),
-    #[error("annullato")]
+    #[error("{0}")]
+    IncompatibleTracks(String),
+    #[error("cancelled")]
     Cancelled,
 }
 

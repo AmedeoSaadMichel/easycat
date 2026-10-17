@@ -1,26 +1,26 @@
 // File: easycut-core/src/ffmpeg/args.rs
-//! Costruzione degli argomenti FFmpeg. Funzioni pure, testabili senza FFmpeg.
+//! Pure FFmpeg argument construction, testable without invoking FFmpeg.
 use crate::estimate::{audio_kbps, output_dims};
 use crate::job::{Codec, Container, Job, Mode, RateControl, Settings, Speed};
 use crate::probe::VideoInfo;
 use crate::{Error, Result};
 
-/// Come viene elaborato il video, dal più veloce al più compatibile.
+/// Video processing backend, from fastest to most compatible.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Backend {
-    /// Decodifica, rotazione, ridimensionamento e codifica tutti sul chip (VideoToolbox).
+    /// Hardware decoding, rotation, scaling and encoding (VideoToolbox).
     Chip,
-    /// Solo la codifica sul chip; decodifica e filtri sulla CPU.
+    /// Hardware encoding only; CPU decoding and filters.
     HardwareEncode,
-    /// Tutto sulla CPU.
+    /// CPU processing only.
     Software,
 }
 
 impl Backend {
     pub fn label(self) -> &'static str {
         match self {
-            Backend::Chip => "tutto sul chip",
-            Backend::HardwareEncode => "encoder hardware",
+            Backend::Chip => "full hardware pipeline",
+            Backend::HardwareEncode => "hardware encoder",
             Backend::Software => "software",
         }
     }
@@ -34,9 +34,9 @@ pub fn hardware_encoder(codec: Codec) -> Option<&'static str> {
     }
 }
 
-/// Ordine in cui provare i backend per questo job: se uno fallisce si passa al successivo.
-/// La pipeline tutta sul chip conviene solo con sorgenti oltre 8 bit (misurato:
-/// 1,6 s contro 2,8 s su 4K HEVC 10 bit; nessun guadagno su 8 bit).
+/// Backend attempt order; advance on failure.
+/// Prefer full hardware for sources above 8 bit (previous measurement:
+/// 1.6 s versus 2.8 s for 4K HEVC 10-bit; no measured benefit for 8-bit).
 pub fn backends(mode: &Mode, info: &VideoInfo) -> Vec<Backend> {
     match mode {
         Mode::Transcode(s) if s.hardware && hardware_encoder(s.codec).is_some() => {
@@ -54,7 +54,7 @@ fn even(x: u32) -> u32 {
     (x.max(2) + 1) & !1
 }
 
-/// Opzioni d'ingresso (prima di `-i`).
+/// Input options, before `-i`.
 pub(crate) fn input_args(backend: Backend) -> Vec<String> {
     if backend == Backend::Chip {
         [
@@ -70,8 +70,8 @@ pub(crate) fn input_args(backend: Backend) -> Vec<String> {
     }
 }
 
-/// Filtro video, se serve. Sul chip la rotazione va applicata a mano: FFmpeg
-/// non ruota da solo i fotogrammi hardware (verificato con PSNR sulle tre rotazioni).
+/// Video filter, if needed. Hardware rotation must be applied explicitly:
+/// FFmpeg does not autorotate hardware frames (PSNR-tested for all three rotations).
 pub(crate) fn filter(s: &Settings, info: &VideoInfo, backend: Backend) -> Option<String> {
     if backend == Backend::Chip {
         let mut parts = Vec::new();
@@ -98,7 +98,7 @@ pub(crate) fn video_args(s: &Settings, backend: Backend) -> Vec<String> {
     let enc = hw.unwrap_or(s.codec.software_encoder());
     let mut a: Vec<String> = vec!["-c:v".into(), enc.into()];
     if let RateControl::Crf(crf) = s.rate {
-        // Con la dimensione target il bitrate lo aggiunge `build_args`, che conosce la durata.
+        // Target bitrate is added by `build_args`, which knows the duration.
         if hw.is_some() {
             a.extend([
                 "-q:v".into(),
@@ -128,7 +128,7 @@ pub(crate) fn video_args(s: &Settings, backend: Backend) -> Vec<String> {
         (Codec::Av1, _, Speed::Small) => &["-preset", "5"],
     };
     a.extend(speed.iter().map(|x| x.to_string()));
-    // x264 da sorgenti a 10 bit produrrebbe "High 10", che molti player non riproducono.
+    // 10-bit x264 would produce "High 10", unsupported by many players.
     if s.codec == Codec::H264 && hw.is_none() {
         a.extend(["-pix_fmt".into(), "yuv420p".into()]);
     }
@@ -138,12 +138,12 @@ pub(crate) fn video_args(s: &Settings, backend: Backend) -> Vec<String> {
     a
 }
 
-/// Durata del tratto che verrà scritto.
+/// Duration of the output selection.
 pub fn job_duration(job: &Job, info: &VideoInfo) -> f64 {
     job.trim.map_or(info.duration, |t| t.duration())
 }
 
-/// Argomenti completi per eseguire `job` con `backend`.
+/// Complete arguments to run `job` using `backend`.
 pub fn build_args(job: &Job, info: &VideoInfo, backend: Backend) -> Result<Vec<String>> {
     if job.input == job.output {
         return Err(Error::OutputIsInput(job.output.clone()));
@@ -162,6 +162,28 @@ pub fn build_args(job: &Job, info: &VideoInfo, backend: Backend) -> Result<Vec<S
         Mode::Copy => {
             a.extend(["-c", "copy", "-avoid_negative_ts", "make_zero"].map(String::from));
         }
+        Mode::Remux(container) | Mode::RemuxSelected { container, .. } => {
+            let excluded = match &job.mode {
+                Mode::RemuxSelected {
+                    excluded_tracks, ..
+                } => excluded_tracks.as_slice(),
+                _ => &[],
+            };
+            let tracks = crate::job::remux_tracks(info, *container, excluded)?;
+            let format = match container {
+                Container::Mp4 => "mp4",
+                Container::Mkv => "matroska",
+                Container::Webm => "webm",
+            };
+            if excluded.is_empty() {
+                a.extend(["-map", "0"].map(String::from));
+            } else {
+                for index in tracks {
+                    a.extend(["-map".into(), format!("0:{index}")]);
+                }
+            }
+            a.extend(["-c", "copy", "-f", format].map(String::from));
+        }
         Mode::Transcode(s) => {
             if let Some(f) = filter(s, info, backend) {
                 a.extend(["-vf".into(), f]);
@@ -171,10 +193,11 @@ pub fn build_args(job: &Job, info: &VideoInfo, backend: Backend) -> Result<Vec<S
             if let RateControl::TargetBytes(bytes) = s.rate {
                 let duration = job_duration(job, info);
                 if duration <= 0.0 {
-                    return Err(Error::BadRange("durata nulla".into()));
+                    return Err(Error::BadRange("zero duration".into()));
                 }
                 let total_kbps = bytes as f64 * 8.0 / duration / 1000.0;
-                let video_kbps = (total_kbps - audio).max(50.0);
+                let reserved_audio = if info.has_audio { audio } else { 0.0 };
+                let video_kbps = (total_kbps - reserved_audio).max(50.0);
                 a.extend(["-b:v".into(), format!("{}k", video_kbps.round() as u64)]);
             }
             let acodec = if s.container == Container::Webm {
@@ -210,6 +233,8 @@ mod tests {
             size_bytes: 100_000_000,
             bitrate: Some(10_000_000),
             has_audio: true,
+            tracks: Vec::new(),
+            track_indices: Vec::new(),
             bit_depth,
             rotation,
         }
@@ -240,7 +265,75 @@ mod tests {
     }
 
     #[test]
-    fn taglio_usa_stream_copy() {
+    fn remux_maps_all_tracks_and_rejects_incompatible_codecs() {
+        let mut i = info(8, 0);
+        i.tracks = vec![
+            ("video".into(), "h264".into()),
+            ("audio".into(), "aac".into()),
+        ];
+        let a = build_args(
+            &job(None, Mode::Remux(Container::Mkv)),
+            &i,
+            Backend::Software,
+        )
+        .unwrap();
+        assert!(a.windows(2).any(|w| w == ["-map", "0"]));
+        assert!(a.windows(2).any(|w| w == ["-c", "copy"]));
+        assert!(a.windows(2).any(|w| w == ["-f", "matroska"]));
+        assert!(!has(&a, "-vf"));
+        assert!(build_args(
+            &job(None, Mode::Remux(Container::Webm)),
+            &i,
+            Backend::Software
+        )
+        .is_err());
+        i.tracks.push(("subtitle".into(), "subrip".into()));
+        assert!(build_args(
+            &job(None, Mode::Remux(Container::Mp4)),
+            &i,
+            Backend::Software
+        )
+        .is_err());
+        i.tracks.push(("data".into(), "bin_data".into()));
+        assert!(build_args(
+            &job(None, Mode::Remux(Container::Mkv)),
+            &i,
+            Backend::Software
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn selective_remux_maps_real_indices_and_never_drops_audio() {
+        let source = crate::probe::parse_probe(r#"{"streams":[{"index":0,"codec_type":"video","codec_name":"h264"},{"index":2,"codec_type":"audio","codec_name":"aac"},{"index":4,"codec_type":"data","codec_name":"bin_data"}],"format":{"duration":"1"}}"#).unwrap();
+        let mode = Mode::RemuxSelected {
+            container: Container::Mkv,
+            excluded_tracks: vec![4],
+        };
+        let args = build_args(&job(None, mode), &source, Backend::Software).unwrap();
+        let maps: Vec<_> = args
+            .windows(2)
+            .filter(|pair| pair[0] == "-map")
+            .map(|pair| pair[1].as_str())
+            .collect();
+        assert_eq!(maps, vec!["0:0", "0:2"]);
+        assert!(args.windows(2).any(|pair| pair == ["-c", "copy"]));
+        assert!(build_args(
+            &job(
+                None,
+                Mode::RemuxSelected {
+                    container: Container::Mkv,
+                    excluded_tracks: vec![2, 4]
+                }
+            ),
+            &source,
+            Backend::Software
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn trim_uses_stream_copy() {
         let t = Some(Trim {
             start: 1.0,
             end: 5.0,
@@ -252,7 +345,7 @@ mod tests {
     }
 
     #[test]
-    fn intervallo_invalido() {
+    fn reject_invalid_range() {
         let t = Some(Trim {
             start: 5.0,
             end: 1.0,
@@ -261,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn output_uguale_input_rifiutato() {
+    fn reject_output_equal_to_input() {
         let j = Job {
             input: PathBuf::from("a.mp4"),
             output: PathBuf::from("a.mp4"),
@@ -272,7 +365,7 @@ mod tests {
     }
 
     #[test]
-    fn h265_con_scala_e_tag() {
+    fn h265_sets_scale_and_tag() {
         let mut s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         s.height = Some(720);
         let a = build_args(
@@ -282,12 +375,12 @@ mod tests {
         )
         .unwrap();
         for x in ["libx265", "scale=-2:720", "hvc1", "aac", "medium"] {
-            assert!(has(&a, x), "manca {x}");
+            assert!(has(&a, x), "missing {x}");
         }
     }
 
     #[test]
-    fn webm_usa_vp9_e_opus() {
+    fn webm_uses_vp9_and_opus() {
         let s = settings(Codec::Vp9, Container::Webm, RateControl::Crf(33));
         let a = build_args(
             &job(None, Mode::Transcode(s)),
@@ -296,13 +389,13 @@ mod tests {
         )
         .unwrap();
         for x in ["libvpx-vp9", "libopus"] {
-            assert!(has(&a, x), "manca {x}");
+            assert!(has(&a, x), "missing {x}");
         }
     }
 
     #[test]
-    fn dimensione_target_diventa_bitrate() {
-        // 10 MB in 80 s = 1000 kbps totali; 128 kbps audio => 872k video
+    fn target_size_sets_bitrate() {
+        // 10 MB in 80 s = 1000 kbps total; 128 kbps audio => 872k video
         let s = settings(
             Codec::H264,
             Container::Mp4,
@@ -318,7 +411,20 @@ mod tests {
     }
 
     #[test]
-    fn h264_software_sempre_a_8_bit() {
+    fn target_size_does_not_reserve_audio_bitrate_for_silent_sources() {
+        let s = settings(
+            Codec::H264,
+            Container::Mp4,
+            RateControl::TargetBytes(10_000_000),
+        );
+        let mut source = info(8, 0);
+        source.has_audio = false;
+        let args = build_args(&job(None, Mode::Transcode(s)), &source, Backend::Software).unwrap();
+        assert!(args.windows(2).any(|w| w == ["-b:v", "1000k"]));
+    }
+
+    #[test]
+    fn h264_software_is_always_8bit() {
         let s = settings(Codec::H264, Container::Mp4, RateControl::Crf(23));
         let a = build_args(
             &job(None, Mode::Transcode(s)),
@@ -330,7 +436,7 @@ mod tests {
     }
 
     #[test]
-    fn velocita_cambia_il_preset_software() {
+    fn speed_changes_software_preset() {
         let mut s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         s.speed = Speed::Fast;
         assert!(has(&video_args(&s, Backend::Software), "veryfast"));
@@ -343,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn senza_hardware_solo_software() {
+    fn hardware_disabled_uses_software_only() {
         let s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         assert_eq!(
             backends(&Mode::Transcode(s), &info(10, 0)),
@@ -354,7 +460,7 @@ mod tests {
 
     #[cfg(target_os = "macos")]
     #[test]
-    fn catena_di_ripiego_su_mac() {
+    fn macos_fallback_chain() {
         let mut s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         s.hardware = true;
         let m = Mode::Transcode(s);
@@ -366,7 +472,7 @@ mod tests {
             backends(&m, &info(8, 0)),
             vec![Backend::HardwareEncode, Backend::Software]
         );
-        // VP9 non ha encoder hardware su Mac.
+        // No VP9 hardware encoder is configured on macOS.
         s.codec = Codec::Vp9;
         assert_eq!(
             backends(&Mode::Transcode(s), &info(10, 0)),
@@ -375,11 +481,11 @@ mod tests {
     }
 
     #[test]
-    fn chip_ruota_e_ridimensiona_sul_chip() {
+    fn hardware_pipeline_rotates_and_scales() {
         let mut s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         s.height = Some(1080);
         let mut i = info(10, 90);
-        // Video verticale: le dimensioni del probe sono già ruotate.
+        // Portrait source: probe dimensions are already rotation-corrected.
         (i.width, i.height) = (2160, 3840);
         assert_eq!(
             filter(&s, &i, Backend::Chip).unwrap(),
@@ -393,11 +499,11 @@ mod tests {
         assert!(a.windows(2).any(|w| w == ["-hwaccel", "videotoolbox"]));
         let pos_hw = a.iter().position(|x| x == "-hwaccel").unwrap();
         let pos_i = a.iter().position(|x| x == "-i").unwrap();
-        assert!(pos_hw < pos_i, "-hwaccel deve precedere -i");
+        assert!(pos_hw < pos_i, "-hwaccel must precede -i");
     }
 
     #[test]
-    fn chip_senza_rotazione_ne_scala_non_ha_filtri() {
+    fn hardware_pipeline_without_transforms_has_no_filters() {
         let s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         assert_eq!(filter(&s, &info(10, 0), Backend::Chip), None);
     }

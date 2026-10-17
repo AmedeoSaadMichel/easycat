@@ -1,198 +1,150 @@
-# Easycut — CLAUDE.md
+# easycat — project instructions
 
-> Regole ordinate per priorità. In conflitto, vince la regola più in alto.
-> "STOP" = blocca e chiedi conferma esplicita. "MAI" = non negoziabile.
+> Rules are ordered by priority. When they conflict, the higher rule wins.
+> "STOP" means request explicit confirmation. "NEVER" is non-negotiable.
 
----
+## Product boundaries
 
-## PRODOTTO: CONFINE NON NEGOZIABILE
+**easycat** is a desktop app for trimming, compressing, resizing and changing video containers efficiently. Efficient means fast, low energy use, and avoiding unnecessary quality loss.
 
-**Easycut** è un'app desktop per tagliare, comprimere, cambiare risoluzione e formato dei video nel modo più efficiente possibile. "Efficiente" = veloce, a basso consumo, senza perdere qualità.
+- Local, private and free: no cloud, uploads or accounts.
+- Native macOS, Windows and Linux app. Mobile and web are outside the first release.
+- Do not add networking, telemetry, analytics, login, advertising or automatic updates without explicit confirmation.
+- Never modify users' source videos in place. Output must be a new file.
 
-- Locale, privato e gratuito: **nessun cloud, nessun upload**, nessun account.
-- App nativa per macOS, Windows e Linux. Mobile e web sono **fuori dalla prima versione**.
-- Non introdurre rete, telemetria, analitica, login, pubblicità o auto-update senza conferma esplicita dell'utente.
-- I video dell'utente non vengono mai copiati o modificati in place: l'output è sempre un nuovo file.
+## Stop-the-line actions
 
----
+Do not perform these actions without explicit user confirmation:
 
-## STOP-THE-LINE
+- **Git:** commit, push, reset --hard, rebase, or any command changing history or remotes. Propose the command and wait for authorization.
+- **AI attribution:** NEVER add AI names or attribution to commit messages, PRs or Git metadata. No AI Co-Authored-By or Generated with trailers; describe the change itself.
+- **Dependencies:** adding, removing or updating crates in Cargo.toml.
+- **Architecture:** changing boundaries between easycut-core, easycut-cli and easycut-app.
+- **FFmpeg pipeline:** changing command construction, encoder selection, stream copy or process management.
+- **Licensing/distribution:** bundling FFmpeg, x264/x265 or other codecs, including GPL and patent considerations.
+- **Privacy/scope:** networking, uploads, analytics or synchronization.
+- **Manual GUI launch:** do not run cargo run -p easycut-app without an explicit request. Build, check, clippy, test and CLI runs on generated clips are authorized.
+- **User files:** NEVER delete or overwrite users' videos. Test only with generated clips or copies.
 
-Non eseguire mai queste azioni senza conferma esplicita dell'utente:
+Changes limited to egui layout/style do not require confirmation when they do not change core calls. Existing explicit user authorization takes precedence within its scope.
 
-- **Git**: `commit`, `push`, `reset --hard`, `rebase`, o qualsiasi comando che modifica history o remote. Proponi il comando e attendi "sì".
-- **Attribuzione AI nei commit**: MAI. Nessun riferimento a Claude, Anthropic o altri assistenti nei messaggi di commit, nelle PR o nei metadati Git. Niente `Co-Authored-By` con un'AI, niente "Generated with". Il messaggio descrive solo la modifica.
-- **Dipendenze**: aggiunta, rimozione o aggiornamento di crate in `Cargo.toml`.
-- **Struttura**: modifiche ai confini tra `easycut-core`, `easycut-cli` ed `easycut-app`.
-- **Pipeline FFmpeg**: cambi a come si costruiscono i comandi, alla scelta degli encoder, allo stream copy o alla gestione dei processi.
-- **Licenze e distribuzione**: includere FFmpeg, x264/x265 o altri codec nel pacchetto (GPL e brevetti H.264/H.265).
-- **Privacy e scope**: qualunque funzione di rete, upload, analitica o sincronizzazione.
-- **Avvio manuale dell'app GUI**: non eseguire `cargo run -p easycut-app` senza richiesta esplicita. `cargo build`, `cargo check`, `cargo clippy`, `cargo test` e la CLI su file di prova sono autorizzati.
-- **File dell'utente**: MAI eliminare o sovrascrivere video dell'utente. Le prove si fanno su copie o file generati.
+## Language
 
-Le modifiche esclusivamente di layout/stile egui non richiedono conferma, purché non tocchino chiamate al core.
+Use **English** for the interface, CLI help, errors, comments, documentation, tests and proposed commit messages. This is the user's current project language requirement. Conversation may follow the user's language. Standard technical terms remain unchanged.
 
----
+## Stack
 
-## LINGUA
+- Rust for both engine and interface.
+- egui/eframe for the native UI; check compatibility with eframe 0.29.
+- External FFmpeg processes for codecs. Future libav bindings must remain behind the existing engine boundary.
+- Tauri was rejected; do not revisit it without a new decision.
 
-Italiano in tutto: risposte, commenti nel codice, documentazione e commit proposti.
-Eccezione: termini tecnici standard (crate, trait, stream copy, keyframe, ecc.) restano in inglese.
+## Architecture
 
----
+The workspace retains its existing internal crate names:
 
-## STACK
-
-- **Rust** per tutto: motore e interfaccia.
-- **egui/eframe** per la UI. L'API di `eframe 0.29` è il punto più a rischio dello scheletro.
-- **FFmpeg** come processo esterno per i codec. Più avanti si potrà passare ai binding libav: il resto del codice non deve dipendere da come FFmpeg viene invocato.
-- **Tauri scartato**: non ripensarlo senza una nuova decisione.
-
----
-
-## ARCHITETTURA
-
-Workspace Cargo con tre parti:
-
-```
-easycut-core/  -> motore: probe, tagli, transcodifica, scelta encoder. Zero dipendenze UI.
-easycut-cli/   -> riga di comando, sottile, chiama solo easycut-core.
-easycut-app/   -> finestra egui, sottile e sostituibile, chiama solo easycut-core.
+```text
+easycut-core/ -> engine: probing, trimming, transcoding, encoder selection; no UI dependencies
+easycut-cli/  -> thin CLI calling the core
+easycut-app/  -> thin native egui UI calling the core
 ```
 
-### Regole non negoziabili
+### UI-independent core
 
-**Core indipendente dalla UI**
+- CLI and GUI call the same easycut-core functions; keep business logic out of both frontends.
+- Core does not depend on egui or clap.
 
-- CLI e GUI chiamano le **stesse funzioni** di `easycut-core`. Nessuna logica di business in `easycut-cli` o `easycut-app`.
-- `easycut-core` non dipende da egui né da `clap`.
+### FFmpeg boundary
 
-**FFmpeg dietro un confine**
+- FFmpeg invocation knowledge belongs in the core's process boundary; other modules use typed jobs/settings rather than argument strings.
+- NEVER concatenate shell commands from user input. Pass argument lists directly, without a shell.
 
-- Tutto ciò che sa come invocare FFmpeg vive in un solo modulo di `easycut-core`. Il resto lavora con tipi propri (job, preset, codec), non con stringhe di argomenti.
-- MAI costruire comandi concatenando stringhe da input utente: argomenti passati come lista, mai tramite shell.
+### Errors
 
-**Error handling**
+- Return Result with core error types.
+- No unwrap/expect outside tests unless documenting a genuine invariant.
+- Do not let panics reach the UI; show readable errors.
+- Capture FFmpeg stderr and include it in failures.
 
-- `Result<T, E>` con tipi di errore definiti in `easycut-core`. MAI `unwrap()`/`expect()` in codice non di test, tranne invarianti documentate.
-- Nessun panic deve arrivare all'UI: gli errori diventano messaggi leggibili.
-- L'output di FFmpeg va catturato (stderr) e incluso negli errori.
+### Long operations
 
-**Operazioni lunghe**
+- Never block the UI thread. Use workers with progress and cancellation.
+- Failed or cancelled exports must not leave partial files.
 
-- Mai bloccare il thread UI: i job girano su thread/task separati con progresso e annullamento.
-- Un job annullato o fallito non lascia file parziali: pulisci l'output incompleto.
+### Single source of truth
 
-**Single source of truth**
+- Keep encoder selection and profile definitions centralized. Report duplication; do not merge independent implementations without confirmation.
 
-- Un solo punto che decide l'encoder da usare, un solo posto che definisce i preset. Se ne trovi due, segnalalo e non unificarli senza conferma.
+## Efficiency principles
 
----
+1. Use stream copy for compatible trimming: fast and lossless, with keyframe-only precision. Explain this limitation in the UI.
+2. Prefer hardware encoding where supported: VideoToolbox on macOS; NVENC/QSV/AMF are future Windows/Linux possibilities. Fall back to software when hardware fails.
+3. Future precise trimming should re-encode only the boundary frames and copy the interior.
+4. Avoid unnecessary transcoding when the requested operation can genuinely use compatible stream copy; do not bypass requested compression simply because codec and dimensions match.
+5. Quality comes before size; do not silently degrade video in defaults.
 
-## EFFICIENZA: PRINCIPI DEL PRODOTTO
+## Current state and next work
 
-1. **Stream copy per i tagli** quando possibile: istantaneo e senza perdita, ma preciso solo al keyframe. Dichiara sempre all'utente quando il taglio è "al keyframe" e non al frame.
-2. **Encoder hardware quando disponibili**: VideoToolbox (macOS), NVENC/QSV/AMF (Windows/Linux). In caso di fallimento, **ripiega** su libx264/libx265 senza far fallire il job.
-3. **Taglio preciso** (futuro): ricodifica solo i frame agli estremi, copia il resto.
-4. Evita ricodifiche inutili: se formato, codec e risoluzione richiesti coincidono con l'origine, usa stream copy.
-5. Qualità prima della dimensione: nessun default che degradi il video in silenzio.
+The workspace builds and has generated-clip integration coverage. The UI includes playback, thumbnails, trim handles, profiles, stream-copy container conversion, progress and cancellation. The public app name is easycat.
 
----
+Remaining areas include precise boundary-only re-encoding, additional platform hardware backends, queues and release packaging with FFmpeg. Treat old benchmark conclusions as machine-specific measurements. VAAPI is not implemented. Evaluate codec licenses and patents before distributing bundles.
 
-## STATO DEL LAVORO
+## File size
 
-- Esiste (o esisteva) uno scheletro creato fuori da questo Mac: `easycut-core`, `easycut-cli`, `easycut-app`. **Non è mai stato compilato.** Se la cartella è vuota, va ricreato.
-- Prima di tutto: far compilare il workspace e provarlo con un video vero.
+- Aim for at most 500 lines per file.
+- 501–800 lines is acceptable.
+- Above 800 lines requires refactoring or an explicit exception.
+- Split responsibilities rather than introducing arbitrary abstractions.
 
-### Prossimi passi (in ordine)
+## Rust file headers
 
-1. Far compilare il progetto e provarlo con un video vero.
-2. Anteprima video con timeline trascinabile.
-3. Taglio preciso: ricodificare solo i frame agli estremi.
-4. Altri formati e codec (WebM, AV1), preset, coda di lavori, drag & drop.
-5. Pacchetti per macOS, Windows e Linux con FFmpeg incluso.
-
-### Rischi noti
-
-- **Licenze/brevetti**: x264 e x265 sono GPL; H.264/H.265 hanno brevetti. Da valutare prima di distribuire.
-- **FFmpeg nel pacchetto**: includerlo per le tre piattaforme è la parte più fastidiosa del packaging.
-- **Linux**: VAAPI non ancora gestito.
-
----
-
-## DIMENSIONE DEI FILE
-
-| Soglia | Azione |
-|---|---|
-| <=500 righe | Obiettivo. |
-| 501-800 righe | Accettabile, nessuna azione. |
-| >800 righe | **Refactor obbligatorio**, oppure chiedi una deroga esplicita. |
-
-Il refactoring segue la responsabilità singola.
-
----
-
-## INTESTAZIONE FILE
-
-Ogni file `.rs` creato o modificato inizia con:
+Every created or modified Rust file starts with its workspace-relative path:
 
 ```rust
-// File: easycut-core/src/percorso/esatto.rs
+// File: easycut-core/src/path/to/file.rs
 ```
 
----
+## Test-driven development and checks
 
-## TEST-DRIVEN DEVELOPMENT
-
-Approccio TDD quando il comportamento è testabile in modo sensato.
-
-- Scrivi prima un test che descriva il comportamento atteso e verificalo rosso.
-- Implementa il minimo per portarlo verde; refactor solo a test verdi e senza ampliare lo scope.
-- Per i bug, aggiungi prima un test di regressione.
-- Il core è testabile senza FFmpeg reale: separa la **costruzione degli argomenti** (test unitari puri) dall'**esecuzione** (test di integrazione con brevi clip generate, mai video dell'utente).
-- Se un test anticipato non è praticabile (UI egui esplorativa, integrazione hardware), dichiara il motivo e applica la verifica più vicina possibile.
-- Prima di dichiarare un lavoro finito: `cargo fmt`, `cargo clippy --workspace -- -D warnings`, `cargo test --workspace`.
-
----
+- Use TDD where it is meaningful: describe expected behavior in a failing test, implement the minimum, then refactor with green tests.
+- Add regression coverage for bugs.
+- Core argument construction should be testable without FFmpeg; integration tests use short generated clips, never user videos.
+- If a test-first approach is impractical for exploratory UI or hardware behavior, explain why and use the nearest meaningful verification.
+- Before finishing: cargo fmt, cargo clippy --workspace -- -D warnings, cargo test --workspace.
 
 ## UI
 
-- Interfaccia minimale e chiara; funziona a diverse dimensioni di finestra e scala del display (HiDPI) senza testo troncato o controlli irraggiungibili.
-- Mostra sempre: file di origine, cosa verrà fatto, progresso, possibilità di annullare, percorso di output.
-- Tema chiaro/scuro seguendo il sistema.
+- Keep the interface clear across viewport sizes and display scales; avoid truncated text and unreachable controls.
+- Always expose source, requested operation, progress, cancellation and output path.
+- Follow the approved dark cosmic easycat design. Preserve readability and native interaction.
 
----
+## Working practices
 
-## COMPORTAMENTO
+### Think before editing
 
-### Pensa prima di scrivere
+- State assumptions before implementation.
+- If interpretations differ materially, describe the options rather than silently choosing.
+- Propose a simpler approach when one exists.
+- Ask when ambiguity blocks safe progress.
 
-- Dichiara le assunzioni prima di implementare.
-- Se esistono più interpretazioni plausibili, elencale: non scegliere in silenzio.
-- Se esiste un approccio più semplice, proponilo prima.
-- Se la richiesta è ambigua, fermati e chiedi.
+### Simplicity
 
-### Semplicità
+- Write the minimum code that solves the requested problem.
+- Avoid speculative features, one-off abstractions and unnecessary configuration.
+- Prefer a small implementation over an unnecessarily large one.
 
-- Scrivi il minimo codice che risolve il problema. Zero "per il futuro".
-- Zero astrazioni per codice usato una sola volta, zero configurabilità non richiesta.
-- Se scrivi 200 righe dove ne bastavano 50, riscrivi.
+### Surgical changes
 
-### Modifiche chirurgiche
+- Change only what the request requires.
+- Do not clean up adjacent style or formatting without a reason.
+- Do not refactor working code gratuitously.
+- Remove orphans introduced by your changes; report pre-existing dead code instead of deleting it.
 
-- Tocca solo ciò che la richiesta richiede.
-- MAI migliorare formattazione, commenti o stile del codice adiacente senza motivo.
-- MAI rifattorizzare codice non rotto.
-- Rimuovi solo gli orfani creati dalle tue modifiche. Codice morto preesistente: segnalalo, non cancellarlo.
+### Proceed versus ask
 
-### Quando chiedere vs procedere
-
-| Situazione | Azione |
-|---|---|
-| Layout/stile egui soltanto | Procedi |
-| Typo o rinomina locale e circoscritta | Procedi |
-| Pipeline FFmpeg, scelta encoder, gestione processi | STOP — chiedi |
-| Nuovo crate o cambio di struttura del workspace | STOP — chiedi |
-| Licenze, packaging, distribuzione | STOP — chiedi |
-| Trade-off non banale | Elenca opzioni — chiedi |
-| Comportamento ambiguo | Fermati — chiedi |
+- Layout/style only: proceed.
+- Local typo fixes or narrowly scoped renames: proceed.
+- FFmpeg pipeline, encoder selection or process management: require authorization.
+- New crates or workspace-boundary changes: require authorization.
+- Licensing, packaging and distribution: require authorization.
+- Nontrivial trade-offs or blocking ambiguity: explain the choices and ask when existing authorization does not resolve them.

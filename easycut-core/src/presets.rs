@@ -35,16 +35,16 @@ fn p(
     }
 }
 
-/// Preset disponibili per questo video e per gli encoder installati.
-/// Le risoluzioni non vengono mai ingrandite oltre l'origine.
+/// Profiles available for this video and the installed encoders.
+/// Never upscale beyond the source resolution.
 pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
     use Codec::*;
     use Container::*;
     let all = [
         p(
             "compat",
-            "Compatibile",
-            "Funziona ovunque",
+            "Compatible",
+            "Works everywhere",
             H264,
             Mp4,
             None,
@@ -52,8 +52,8 @@ pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
         ),
         p(
             "compact",
-            "Compatto",
-            "Ottimo rapporto qualità/peso",
+            "Compact",
+            "Good quality-to-size balance",
             H265,
             Mp4,
             None,
@@ -61,8 +61,8 @@ pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
         ),
         p(
             "compact-1080",
-            "Compatto 1080p",
-            "Full HD, molto leggero",
+            "Compact 1080p",
+            "Full HD, smaller files",
             H265,
             Mp4,
             Some(1080),
@@ -70,8 +70,8 @@ pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
         ),
         p(
             "compact-720",
-            "Compatto 720p",
-            "HD, leggerissimo",
+            "Compact 720p",
+            "HD, very small files",
             H265,
             Mp4,
             Some(720),
@@ -80,7 +80,7 @@ pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
         p(
             "web-720",
             "Web 720p",
-            "WebM per siti e browser",
+            "WebM for websites and browsers",
             Vp9,
             Webm,
             Some(720),
@@ -88,8 +88,8 @@ pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
         ),
         p(
             "tiny-480",
-            "Messaggi 480p",
-            "Per chat e email",
+            "Messages 480p",
+            "For messaging and email",
             H264,
             Mp4,
             Some(480),
@@ -97,8 +97,8 @@ pub fn builtin(info: &VideoInfo, encoders: &HashSet<String>) -> Vec<Preset> {
         ),
         p(
             "min-720",
-            "Massima compressione",
-            "AV1, il più piccolo",
+            "Maximum compression",
+            "AV1, smallest files",
             Av1,
             Mp4,
             Some(720),

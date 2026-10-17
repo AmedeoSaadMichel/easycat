@@ -1,5 +1,5 @@
 // File: easycut-app/src/video.rs
-//! Stato del video aperto: taglio, scelta del formato e stime.
+//! Opened video state: trim, output format and size estimates.
 use crate::worker::THUMBS;
 use easycut_core::estimate::estimate_bytes;
 use easycut_core::ffmpeg::hardware_encoder;
@@ -13,8 +13,19 @@ use std::sync::mpsc::Sender;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Choice {
     Copy,
+    Remux(Container),
     Preset(usize),
     Target,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct EstimateKey {
+    path: PathBuf,
+    choice: Choice,
+    start: u64,
+    end: u64,
+    hardware: bool,
+    speed: Speed,
 }
 
 pub struct Video {
@@ -28,11 +39,12 @@ pub struct Video {
     pub playhead: f64,
     pub presets: Vec<Preset>,
     pub choice: Choice,
+    pub remux_excluded: Vec<u32>,
     pub target_mb: f64,
     pub hardware: bool,
     pub speed: Speed,
     pub out_stem: String,
-    /// Dimensioni misurate sui campioni, per indice di preset.
+    /// Sample-based sizes by profile index.
     pub measured: HashMap<usize, u64>,
     measured_sig: (u64, u64, bool, Speed),
     target_codec: Codec,
@@ -61,10 +73,11 @@ impl Video {
             playhead: 0.0,
             presets,
             choice: Choice::Copy,
+            remux_excluded: Vec::new(),
             target_mb,
             hardware: true,
             speed: Speed::Balanced,
-            out_stem: format!("{stem}_easycut"),
+            out_stem: format!("{stem}_easycat"),
             measured: HashMap::new(),
             measured_sig: (0, 0, true, Speed::Balanced),
             target_codec: if has_h265 { Codec::H265 } else { Codec::H264 },
@@ -88,7 +101,7 @@ impl Video {
         self.trim().map_or(self.info.duration, |t| t.duration())
     }
 
-    /// Peso del solo tratto selezionato nel file originale.
+    /// Approximate source bytes within the selected range.
     pub fn original_slice_bytes(&self) -> u64 {
         if self.info.duration <= 0.0 {
             return 0;
@@ -99,6 +112,16 @@ impl Video {
     fn mode_for(&self, c: Choice) -> Mode {
         match c {
             Choice::Copy => Mode::Copy,
+            Choice::Remux(c) => {
+                if self.remux_excluded.is_empty() {
+                    Mode::Remux(c)
+                } else {
+                    Mode::RemuxSelected {
+                        container: c,
+                        excluded_tracks: self.remux_excluded.clone(),
+                    }
+                }
+            }
             Choice::Preset(i) => Mode::Transcode(self.settings_for(i)),
             Choice::Target => Mode::Transcode(Settings {
                 codec: self.target_codec,
@@ -115,8 +138,8 @@ impl Video {
         self.mode_for(self.choice)
     }
 
-    /// Le misure valgono solo per questo taglio, scelta hardware e velocità.
-    /// Ritorna true se erano da scartare.
+    /// Measurements are valid only for the current trim, hardware setting and speed.
+    /// Return true when the signature changes, even with no completed samples.
     pub fn invalidate_stale_measures(&mut self) -> bool {
         let sig = (
             self.start.to_bits(),
@@ -128,9 +151,23 @@ impl Video {
             return false;
         }
         self.measured_sig = sig;
-        let had = !self.measured.is_empty();
         self.measured.clear();
-        had
+        true
+    }
+
+    pub fn estimate_key(&self) -> EstimateKey {
+        EstimateKey {
+            path: self.path.clone(),
+            choice: self.choice,
+            start: self.start.to_bits(),
+            end: self.end.to_bits(),
+            hardware: self.hardware,
+            speed: self.speed,
+        }
+    }
+
+    pub fn estimate_is_measured(&self) -> bool {
+        matches!(self.choice, Choice::Preset(i) if self.measured.contains_key(&i))
     }
 
     pub fn settings_for(&self, i: usize) -> Settings {
@@ -164,6 +201,7 @@ impl Video {
     pub fn out_ext(&self) -> String {
         match self.mode() {
             Mode::Copy => self.copy_ext(),
+            Mode::Remux(c) | Mode::RemuxSelected { container: c, .. } => c.ext().into(),
             Mode::Transcode(s) => s.container.ext().into(),
         }
     }
@@ -179,22 +217,78 @@ impl Video {
             .height
             .map_or_else(|| format!("{}p", self.info.height), |h| format!("{h}p"));
         let soft = if self.hardware && hardware_encoder(s.codec).is_none() {
-            " · solo software, più lento"
+            " · software only, slower"
         } else {
             ""
         };
         format!(".{} · {} · {res}{soft}", s.container.ext(), s.codec.label())
     }
 
-    /// True se l'esportazione dovrebbe usare l'hardware (per avvisare se ripiega).
+    /// Whether export should use hardware, for fallback warnings.
     pub fn expects_hardware(&self) -> bool {
         match self.mode() {
             Mode::Transcode(s) => s.hardware && hardware_encoder(s.codec).is_some(),
-            Mode::Copy => false,
+            Mode::Copy | Mode::Remux(_) | Mode::RemuxSelected { .. } => false,
+        }
+    }
+
+    pub fn export_blocker(&self) -> Option<String> {
+        if let Choice::Remux(container) = self.choice {
+            easycut_core::job::remux_tracks(&self.info, container, &self.remux_excluded)
+                .err()
+                .map(|error| error.to_string())
+        } else {
+            None
         }
     }
 
     pub fn set_choice(&mut self, c: Choice) {
+        if self.choice != c {
+            self.remux_excluded.clear();
+        }
         self.choice = c;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn remux_exclusions_require_consent_and_reset_with_destination() {
+        let info = easycut_core::probe::parse_probe(r#"{"streams":[{"index":0,"codec_type":"video","codec_name":"h264"},{"index":1,"codec_type":"audio","codec_name":"aac"},{"index":2,"codec_type":"data","codec_name":"bin_data"}],"format":{"duration":"60"}}"#).unwrap();
+        let (tx, _rx) = std::sync::mpsc::channel();
+        let mut video = Video::new("camera.mov".into(), info, vec![], tx, true);
+        video.set_choice(Choice::Remux(Container::Mkv));
+        assert!(video.export_blocker().is_some());
+        video.remux_excluded.push(2);
+        assert!(video.export_blocker().is_none());
+        assert!(matches!(video.mode(), Mode::RemuxSelected { .. }));
+        video.set_choice(Choice::Remux(Container::Mp4));
+        assert!(video.remux_excluded.is_empty());
+        assert!(video.export_blocker().is_some());
+        video.remux_excluded = vec![1, 2];
+        assert!(video.export_blocker().is_some());
+    }
+
+    #[test]
+    fn invalidate_pending_and_completed_estimates_when_settings_change() {
+        let info = easycut_core::probe::parse_probe(r#"{"streams":[{"codec_type":"video","codec_name":"h264","width":1920,"height":1080}],"format":{"duration":"60"}}"#).unwrap();
+        let (tx, _rx) = std::sync::mpsc::channel();
+        let mut video = Video::new("input.mp4".into(), info, vec![], tx, true);
+        assert!(video.invalidate_stale_measures());
+        assert!(!video.invalidate_stale_measures());
+        // An unfinished measurement must be invalidated even before it yields any bytes.
+        video.end = 30.0;
+        assert!(video.invalidate_stale_measures());
+        video.measured.insert(0, 42);
+        video.hardware = false;
+        assert!(video.invalidate_stale_measures());
+        assert!(video.measured.is_empty());
+        let key = video.estimate_key();
+        video.choice = Choice::Target;
+        assert!(key != video.estimate_key());
+        video.speed = Speed::Fast;
+        assert!(video.invalidate_stale_measures());
     }
 }

@@ -1,5 +1,5 @@
 // File: easycut-app/src/worker.rs
-//! Lavoro in background: nessuna chiamata a FFmpeg sul thread UI.
+//! Background work: never call FFmpeg on the UI thread.
 use easycut_core::ffmpeg::Backend;
 use easycut_core::frames::{self, Frame};
 use easycut_core::playback::{AudioPlayer, FrameStream};
@@ -19,15 +19,16 @@ pub enum Msg {
     Loaded(u64, Result<VideoInfo, String>),
     Thumb(u64, usize, Frame),
     Preview(u64, Frame),
-    /// Fotogramma di riproduzione: id, istante nel video, immagine.
+    /// Playback frame: id, video timestamp, image.
     PlayFrame(u64, f64, Frame),
     PlayEnded(u64),
-    /// Avanzamento dell'esportazione, 0..1.
+    /// Export progress, 0..1.
     Progress(f64),
-    /// Misura di un preset: id misurazione, indice preset, byte.
+    /// Measured profile: measurement id, profile index, bytes.
     Measured(u64, usize, u64),
     MeasureDone(u64),
-    /// Esito dell'esportazione: byte scritti e backend usato.
+    MeasureFailed(u64, String),
+    /// Export result: output bytes and backend used.
     Done(Result<(u64, Backend), String>),
 }
 
@@ -56,8 +57,8 @@ pub fn spawn_thumbs(path: PathBuf, info: &VideoInfo, gen: u64, tx: Sender<Msg>, 
     });
 }
 
-/// Thread dell'anteprima: riceve istanti e risponde solo all'ultimo richiesto.
-/// Termina quando il `Sender` restituito viene scartato.
+/// Preview worker: process only the latest requested timestamp.
+/// Stops when the returned `Sender` is dropped.
 pub fn spawn_preview(
     path: PathBuf,
     info: &VideoInfo,
@@ -111,12 +112,12 @@ pub struct MeasureArgs {
     pub info: VideoInfo,
     pub trim: Option<Trim>,
     pub id: u64,
-    /// Preset da misurare: (indice, impostazioni).
+    /// Profiles to measure: (index, settings).
     pub items: Vec<(usize, Settings)>,
     pub stop: Arc<AtomicBool>,
 }
 
-/// Misura in sequenza la dimensione reale di ciascun preset.
+/// Measure each profile sequentially using encoded samples.
 pub fn spawn_measure(a: MeasureArgs, tx: Sender<Msg>, ctx: Context) {
     std::thread::spawn(move || {
         for (idx, settings) in &a.items {
@@ -124,8 +125,14 @@ pub fn spawn_measure(a: MeasureArgs, tx: Sender<Msg>, ctx: Context) {
                 break;
             }
             let r = ffmpeg::measure_size(&a.path, &a.info, settings, a.trim, &a.stop);
-            if let Ok(bytes) = r {
-                send(&tx, &ctx, Msg::Measured(a.id, *idx, bytes));
+            match r {
+                Ok(bytes) if !a.stop.load(Ordering::Relaxed) => {
+                    send(&tx, &ctx, Msg::Measured(a.id, *idx, bytes))
+                }
+                Err(error) if !a.stop.load(Ordering::Relaxed) => {
+                    send(&tx, &ctx, Msg::MeasureFailed(a.id, error.to_string()))
+                }
+                _ => {}
             }
         }
         send(&tx, &ctx, Msg::MeasureDone(a.id));
@@ -141,7 +148,7 @@ pub struct PlayArgs {
     pub duration: f64,
     pub fps: f64,
     pub size: (usize, usize),
-    pub muted: bool,
+    pub volume: u8,
     pub stop: Arc<AtomicBool>,
 }
 
@@ -152,7 +159,7 @@ impl PlayArgs {
         id: u64,
         start: f64,
         duration: f64,
-        muted: bool,
+        volume: u8,
         stop: Arc<AtomicBool>,
     ) -> Self {
         let fps = if info.fps > 1.0 {
@@ -168,13 +175,13 @@ impl PlayArgs {
             duration,
             fps,
             size,
-            muted,
+            volume,
             stop,
         }
     }
 }
 
-/// Riproduce `duration` secondi da `start` al ritmo reale. Si ferma con `stop`.
+/// Play `duration` seconds from `start` in real time, until `stop` is set.
 pub fn spawn_play(a: PlayArgs, tx: Sender<Msg>, ctx: Context) {
     std::thread::spawn(move || {
         let (w, h) = a.size;
@@ -186,11 +193,11 @@ pub fn spawn_play(a: PlayArgs, tx: Sender<Msg>, ctx: Context) {
                 let Some(frame) = stream.next_frame() else {
                     break;
                 };
-                // L'orologio parte al primo fotogramma, così video e audio restano allineati.
+                // Start the clock at the first frame to keep video and audio aligned.
                 if began.is_none() {
                     began = Some(Instant::now());
-                    if !a.muted {
-                        audio = AudioPlayer::spawn(&a.path, a.start, a.duration);
+                    if a.volume > 0 {
+                        audio = AudioPlayer::spawn(&a.path, a.start, a.duration, a.volume);
                     }
                 }
                 let due =

@@ -1,14 +1,14 @@
 // File: easycut-core/src/playback.rs
-//! Riproduzione per l'anteprima: fotogrammi in streaming e audio con ffplay.
-//! Insieme a `ffmpeg` e `frames` è l'unico punto che avvia processi FFmpeg.
+//! Preview playback: streamed frames and audio through ffplay.
+//! Along with `ffmpeg` and `frames`, this module starts FFmpeg processes.
 use crate::frames::Frame;
 use crate::{Error, Result};
 use std::io::Read;
 use std::path::Path;
 use std::process::{Child, ChildStdout, Command, Stdio};
 
-/// Flusso di fotogrammi RGB a `fps` costanti, a partire da `start`.
-/// Alla distruzione termina il processo FFmpeg.
+/// RGB frame stream at constant `fps`, starting at `start`.
+/// Dropping the stream terminates FFmpeg.
 pub struct FrameStream {
     child: Child,
     stdout: ChildStdout,
@@ -41,7 +41,7 @@ impl FrameStream {
                 program: "ffmpeg",
                 source,
             })?;
-        let stdout = child.stdout.take().expect("stdout è piped");
+        let stdout = child.stdout.take().expect("stdout is piped");
         Ok(FrameStream {
             child,
             stdout,
@@ -50,7 +50,7 @@ impl FrameStream {
         })
     }
 
-    /// Il prossimo fotogramma, o `None` a fine flusso.
+    /// Next frame, or `None` at end of stream.
     pub fn next_frame(&mut self) -> Option<Frame> {
         let mut rgb = vec![0u8; self.width * self.height * 3];
         self.stdout.read_exact(&mut rgb).ok()?;
@@ -69,18 +69,19 @@ impl Drop for FrameStream {
     }
 }
 
-/// Audio del video riprodotto da ffplay (senza finestra). Si ferma alla distruzione.
+/// Video audio through windowless ffplay; stops on drop.
 pub struct AudioPlayer {
     child: Child,
 }
 
 impl AudioPlayer {
-    /// `None` se ffplay non è disponibile: la riproduzione resta muta.
-    pub fn spawn(input: &Path, start: f64, duration: f64) -> Option<Self> {
+    /// Return `None` if ffplay is unavailable; playback remains muted.
+    pub fn spawn(input: &Path, start: f64, duration: f64, volume: u8) -> Option<Self> {
         let child = Command::new("ffplay")
             .args(["-nodisp", "-autoexit", "-vn", "-loglevel", "quiet", "-ss"])
             .arg(format!("{:.3}", start.max(0.0)))
             .args(["-t", &format!("{duration:.3}")])
+            .args(["-volume", &volume.min(100).to_string()])
             .arg(input)
             .stdin(Stdio::null())
             .stdout(Stdio::null())

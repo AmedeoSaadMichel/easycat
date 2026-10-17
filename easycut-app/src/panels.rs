@@ -1,8 +1,11 @@
 // File: easycut-app/src/panels.rs
-//! Pannello dei formati: ogni scelta mostra la dimensione stimata del file.
-use crate::video::{Choice, Video};
-use easycut_core::Speed;
-use eframe::egui::{self, Color32, RichText, Sense};
+//! Three primary operations and settings for the selected operation.
+use crate::{
+    theme,
+    video::{Choice, Video},
+};
+use easycut_core::{Container, Speed};
+use eframe::egui::{self, RichText, Sense, Stroke};
 
 pub fn fmt_bytes(b: u64) -> String {
     let b = b as f64;
@@ -15,47 +18,78 @@ pub fn fmt_bytes(b: u64) -> String {
     }
 }
 
-/// Un riquadro cliccabile. Ritorna true se è stato cliccato.
-fn card(ui: &mut egui::Ui, selected: bool, body: impl FnOnce(&mut egui::Ui)) -> bool {
-    let fill = if selected {
-        ui.visuals().selection.bg_fill.gamma_multiply(0.35)
-    } else {
-        ui.visuals().faint_bg_color
-    };
-    let stroke = if selected {
-        ui.visuals().selection.stroke
-    } else {
-        ui.visuals().widgets.noninteractive.bg_stroke
-    };
-    let r = egui::Frame::group(ui.style())
-        .fill(fill)
-        .stroke(stroke)
+fn card(ui: &mut egui::Ui, selected: bool, title: &str, subtitle: &str, icon: usize) -> bool {
+    let response = egui::Frame::none()
+        .fill(if selected {
+            theme::MINT.gamma_multiply(0.12)
+        } else {
+            theme::SURFACE
+        })
+        .stroke(Stroke::new(
+            if selected { 2.0_f32 } else { 1.0_f32 },
+            if selected { theme::MINT } else { theme::LINE },
+        ))
+        .rounding(12.0)
+        .inner_margin(6.0)
         .show(ui, |ui| {
-            ui.set_width(ui.available_width());
-            body(ui);
-        });
-    let resp = r.response.interact(Sense::click());
-    if resp.hovered() {
-        ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
-    }
-    resp.clicked()
+            ui.set_min_width((ui.available_width() - 2.0).max(0.0));
+            ui.spacing_mut().item_spacing.y = 3.0;
+            ui.horizontal(|ui| {
+                let (rect, _) = ui.allocate_exact_size(egui::vec2(30.0, 30.0), Sense::hover());
+                theme::operation_icon(ui.painter(), rect, icon);
+                ui.vertical(|ui| {
+                    ui.set_max_width((ui.available_width() - 22.0).max(100.0));
+                    ui.label(
+                        RichText::new(title)
+                            .family(egui::FontFamily::Name("display".into()))
+                            .size(17.0),
+                    );
+                    ui.label(RichText::new(subtitle).color(theme::MUTED).small());
+                });
+            });
+            let center = egui::pos2(ui.max_rect().right() - 9.0, ui.min_rect().center().y);
+            ui.painter().circle_stroke(
+                center,
+                8.0,
+                Stroke::new(1.8_f32, if selected { theme::MINT } else { theme::LILAC }),
+            );
+            if selected {
+                ui.painter().circle_filled(center, 4.5, theme::MINT);
+            }
+        })
+        .response;
+    response
+        .interact(Sense::click())
+        .on_hover_cursor(egui::CursorIcon::PointingHand)
+        .clicked()
 }
 
-fn size_line(ui: &mut egui::Ui, est: u64, base: u64) {
-    ui.horizontal(|ui| {
+pub fn size_line(ui: &mut egui::Ui, est: u64, base: u64) {
+    ui.horizontal_wrapped(|ui| {
         ui.label(
-            RichText::new(format!("~{}", fmt_bytes(est)))
-                .size(20.0)
+            RichText::new(format!("≈ {}", fmt_bytes(est)))
+                .family(egui::FontFamily::Name("display".into()))
+                .size(if ui.ctx().screen_rect().height() < 600.0 {
+                    26.0
+                } else {
+                    36.0
+                })
                 .strong(),
         );
         if base > 0 {
             let pct = (1.0 - est as f64 / base as f64) * 100.0;
-            let (txt, col) = if pct >= 0.5 {
-                (format!("−{pct:.0}%"), Color32::from_rgb(80, 200, 120))
-            } else {
-                (format!("+{:.0}%", -pct), Color32::from_rgb(230, 150, 60))
-            };
-            ui.label(RichText::new(txt).color(col).strong());
+            if pct.abs() >= 0.5 {
+                let text = if pct > 0.0 {
+                    format!("−{pct:.0}%")
+                } else {
+                    format!("+{:.0}%", -pct)
+                };
+                ui.label(
+                    RichText::new(text)
+                        .color(if pct > 0.0 { theme::MINT } else { theme::CORAL })
+                        .strong(),
+                );
+            }
         }
     });
 }
@@ -66,101 +100,237 @@ pub enum PanelAction {
     MeasureOne(usize),
 }
 
-/// `measuring` = (completati, totali) se una misurazione è in corso.
-pub fn show(ui: &mut egui::Ui, v: &mut Video, measuring: Option<(usize, usize)>) -> PanelAction {
-    let mut action = PanelAction::None;
-    ui.heading("Formato e compressione");
-    ui.label(
-        RichText::new("Le dimensioni sono stime; il file reale può differire.")
-            .small()
-            .weak(),
-    );
-    ui.checkbox(&mut v.hardware, "Accelerazione hardware (più veloce)");
-    ui.horizontal(|ui| {
-        ui.label("Velocità:");
-        for speed in [Speed::Fast, Speed::Balanced, Speed::Small] {
-            ui.selectable_value(&mut v.speed, speed, speed.label());
+pub fn show(ui: &mut egui::Ui, v: &mut Video) {
+    let compact = ui.ctx().screen_rect().height() < 820.0;
+    if compact {
+        let mut operation = match v.choice {
+            Choice::Copy => 0,
+            Choice::Remux(_) => 1,
+            _ => 2,
+        };
+        egui::ComboBox::from_id_salt("operation")
+            .width(ui.available_width() - 8.0)
+            .selected_text(["Trim only", "Change container", "Compress"][operation])
+            .show_ui(ui, |ui| {
+                for (index, name) in ["Trim only", "Change container", "Compress"]
+                    .into_iter()
+                    .enumerate()
+                {
+                    ui.selectable_value(&mut operation, index, name);
+                }
+            });
+        let current = match v.choice {
+            Choice::Copy => 0,
+            Choice::Remux(_) => 1,
+            _ => 2,
+        };
+        if operation != current {
+            let choice = match operation {
+                0 => Choice::Copy,
+                1 => Choice::Remux(
+                    [Container::Mp4, Container::Mkv, Container::Webm]
+                        .into_iter()
+                        .find(|c| easycut_core::job::validate_remux(&v.info, *c).is_ok())
+                        .unwrap_or(Container::Mkv),
+                ),
+                _ if v.presets.is_empty() => Choice::Target,
+                _ => Choice::Preset(0),
+            };
+            v.set_choice(choice);
         }
-    })
-    .response
-    .on_hover_text(
-        "Veloce: esporta prima, file un po' più grande.\nPiù piccolo: più lento, file più leggero.\nCon l'encoder hardware la differenza è minima.",
-    );
-    ui.horizontal(|ui| {
-        let busy = measuring.is_some();
-        if ui
-            .add_enabled(
-                !busy && !v.presets.is_empty(),
-                egui::Button::new("Misura le dimensioni reali"),
-            )
-            .on_hover_text(
-                "Codifica brevi campioni del tratto scelto per una stima molto più fedele",
-            )
-            .clicked()
-        {
-            action = PanelAction::MeasureAll;
-        }
-        if let Some((done, total)) = measuring {
-            ui.spinner();
-            ui.label(format!("{done}/{total}"));
-        }
-    });
-    ui.add_space(4.0);
-
-    let base = v.original_slice_bytes();
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        if card(ui, v.choice == Choice::Copy, |ui| {
-            ui.label(RichText::new("Solo taglio").strong());
-            ui.label(RichText::new("Senza ricodifica: istantaneo, nessuna perdita. Il taglio cade sul keyframe più vicino.").small());
-            ui.label(RichText::new(format!(".{} · stessa qualità", v.copy_ext())).small().weak());
-            size_line(ui, v.estimate_for(Choice::Copy), base);
-        }) {
+    } else {
+        if card(
+            ui,
+            v.choice == Choice::Copy,
+            "Trim only",
+            "Fast, no quality loss",
+            0,
+        ) {
             v.set_choice(Choice::Copy);
         }
-
-        for i in 0..v.presets.len() {
-            let selected_here = v.choice == Choice::Preset(i);
-            let (name, desc, label) = {
-                let p = &v.presets[i];
-                (p.name, p.description, v.preset_label(i))
-            };
-            if card(ui, v.choice == Choice::Preset(i), |ui| {
-                ui.label(RichText::new(name).strong());
-                ui.label(RichText::new(desc).small());
-                ui.label(RichText::new(label).small().weak());
-                size_line(ui, v.estimate_for(Choice::Preset(i)), base);
-                if v.measured.contains_key(&i) {
-                    ui.label(RichText::new("misurata").small().color(Color32::from_rgb(80, 200, 120)));
-                } else if selected_here
-                    && measuring.is_none()
-                    && ui.small_button("Misura questo").clicked()
-                {
-                    action = PanelAction::MeasureOne(i);
-                }
-            }) {
-                v.set_choice(Choice::Preset(i));
-            }
+        let remux = matches!(v.choice, Choice::Remux(_));
+        if card(ui, remux, "Change container", "Same quality, new format", 1) && !remux {
+            let containers = [Container::Mp4, Container::Mkv, Container::Webm];
+            let preferred = containers
+                .into_iter()
+                .find(|c| easycut_core::job::validate_remux(&v.info, *c).is_ok())
+                .or_else(|| {
+                    containers.into_iter().find(|c| {
+                        easycut_core::job::remux_issues(&v.info, *c)
+                            .iter()
+                            .all(|issue| issue.removable)
+                    })
+                })
+                .unwrap_or(Container::Mkv);
+            v.set_choice(Choice::Remux(preferred));
         }
-
-        let sel = v.choice == Choice::Target;
-        if card(ui, sel, |ui| {
-            ui.label(RichText::new("Dimensione precisa").strong());
-            ui.label(RichText::new("Scegli quanto deve pesare il file; la qualità si adatta.").small());
-            ui.horizontal(|ui| {
-                ui.add(
-                    egui::DragValue::new(&mut v.target_mb)
-                        .range(0.5..=100_000.0)
-                        .speed(0.5)
-                        .suffix(" MB"),
-                );
-                ui.label(RichText::new("H.265 · MP4").small().weak());
+        let compressing = matches!(v.choice, Choice::Preset(_) | Choice::Target);
+        if card(ui, compressing, "Compress", "A smaller file", 2) && !compressing {
+            v.set_choice(if v.presets.is_empty() {
+                Choice::Target
+            } else {
+                Choice::Preset(0)
             });
-            if sel {
-                size_line(ui, v.estimate_for(Choice::Target), base);
-            }
-        }) {
-            v.set_choice(Choice::Target);
         }
-    });
+    }
+    ui.separator();
+    match v.choice {
+        Choice::Copy => {
+            ui.label(
+                RichText::new(format!(
+                    ".{} · original quality and resolution",
+                    v.copy_ext()
+                ))
+                .color(theme::MINT),
+            );
+            ui.label(
+                RichText::new("Cuts snap to keyframes, not individual frames.")
+                    .small()
+                    .color(theme::MUTED),
+            );
+        }
+        Choice::Remux(container) => {
+            if !compact {
+                ui.label("Output format");
+            }
+            ui.horizontal_wrapped(|ui| {
+                for c in [Container::Mp4, Container::Mkv, Container::Webm] {
+                    if ui
+                        .add(
+                            egui::Button::new(c.ext().to_uppercase())
+                                .selected(v.choice == Choice::Remux(c)),
+                        )
+                        .clicked()
+                    {
+                        v.set_choice(Choice::Remux(c));
+                    }
+                }
+            });
+            let mut tracks = |ui: &mut egui::Ui| {
+                let issues = easycut_core::job::remux_issues(&v.info, container);
+                if issues.is_empty() {
+                    ui.label(
+                        RichText::new("All tracks can be copied without re-encoding.")
+                            .small()
+                            .color(theme::MINT),
+                    );
+                } else {
+                    ui.label(
+                        RichText::new("Incompatible tracks")
+                            .strong()
+                            .color(theme::CORAL),
+                    );
+                    for issue in issues {
+                        ui.label(issue.description());
+                        if issue.removable {
+                            let mut excluded = v.remux_excluded.contains(&issue.index);
+                            if ui
+                                .checkbox(&mut excluded, "Exclude this optional track")
+                                .changed()
+                            {
+                                if excluded {
+                                    v.remux_excluded.push(issue.index);
+                                } else {
+                                    v.remux_excluded.retain(|index| *index != issue.index);
+                                }
+                            }
+                            if excluded {
+                                ui.label(
+                                    RichText::new("This track will not be in the output.")
+                                        .small()
+                                        .color(theme::CORAL),
+                                );
+                            }
+                        } else {
+                            ui.label(RichText::new("Video/audio cannot be excluded. Choose another container or use Compress.").small().color(theme::CORAL));
+                        }
+                    }
+                }
+                ui.label(RichText::new("All video and audio tracks are preserved. Only explicitly selected optional tracks are omitted. Trims use keyframes.").small().color(theme::MUTED));
+            };
+            ui.menu_button("Track compatibility", |ui| tracks(ui));
+        }
+        Choice::Preset(_) | Choice::Target => {
+            if !compact {
+                ui.label("Export profile");
+            }
+            let selected = match v.choice {
+                Choice::Preset(i) => v.presets[i].name,
+                _ => "Target size",
+            };
+            egui::ComboBox::from_id_salt("profile")
+                .selected_text(selected)
+                .width(ui.available_width() - 8.0)
+                .show_ui(ui, |ui| {
+                    for i in 0..v.presets.len() {
+                        if ui
+                            .selectable_label(v.choice == Choice::Preset(i), v.presets[i].name)
+                            .clicked()
+                        {
+                            v.set_choice(Choice::Preset(i));
+                        }
+                    }
+                    if ui
+                        .selectable_label(v.choice == Choice::Target, "Target size")
+                        .clicked()
+                    {
+                        v.set_choice(Choice::Target);
+                    }
+                });
+            if let Choice::Preset(i) = v.choice {
+                if !compact {
+                    ui.label(RichText::new(v.preset_label(i)).small().color(theme::MUTED))
+                        .on_hover_text(v.presets[i].description);
+                }
+            } else {
+                ui.horizontal(|ui| {
+                    ui.label("Size");
+                    ui.add(
+                        egui::DragValue::new(&mut v.target_mb)
+                            .range(0.5..=100_000.0)
+                            .speed(0.5)
+                            .suffix(" MB"),
+                    );
+                });
+                if !compact {
+                    ui.label(
+                        RichText::new("Quality adjusts to the requested size.")
+                            .small()
+                            .color(theme::MUTED),
+                    );
+                }
+            }
+            if !compact {
+                ui.label("Speed");
+            }
+            egui::ComboBox::from_id_salt("speed")
+                .selected_text(v.speed.label())
+                .width(ui.available_width() - 8.0)
+                .show_ui(ui, |ui| {
+                    for speed in [Speed::Fast, Speed::Balanced, Speed::Small] {
+                        ui.selectable_value(&mut v.speed, speed, speed.label());
+                    }
+                });
+            ui.checkbox(&mut v.hardware, "Hardware acceleration");
+        }
+    }
+}
+
+pub fn estimate_options(ui: &mut egui::Ui, v: &Video, measuring: bool) -> PanelAction {
+    let mut action = PanelAction::None;
+    if measuring {
+        ui.label("Measurement in progress…");
+    } else {
+        if let Choice::Preset(i) = v.choice {
+            if ui.button("Refine this estimate").clicked() {
+                action = PanelAction::MeasureOne(i);
+                ui.close_menu();
+            }
+        }
+        if ui.button("Measure all profiles").clicked() {
+            action = PanelAction::MeasureAll;
+            ui.close_menu();
+        }
+    }
     action
 }

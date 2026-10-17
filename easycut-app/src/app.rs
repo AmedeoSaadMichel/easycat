@@ -1,13 +1,15 @@
 // File: easycut-app/src/app.rs
-//! Stato dell'applicazione, messaggi dai thread di lavoro e ciclo di aggiornamento.
+//! Application state, worker messages and update loop.
 mod bars;
 mod center;
 mod jobs;
 mod playback;
+#[cfg(test)]
+mod preview;
 
 use crate::controls::{self, Action};
-use crate::panels::{self, PanelAction};
-use crate::video::Video;
+use crate::panels::PanelAction;
+use crate::video::{EstimateKey, Video};
 use crate::worker::{self, Msg};
 use easycut_core::{ffmpeg, presets};
 use eframe::egui::{self, ColorImage, TextureOptions};
@@ -52,14 +54,24 @@ pub struct App {
     play: Option<Play>,
     play_id: u64,
     muted: bool,
+    volume: u8,
     progress: f32,
     export_cancel: Option<Arc<AtomicBool>>,
     measure: Option<Measure>,
     measure_id: u64,
+    estimate_key: Option<EstimateKey>,
+    estimate_deadline: Option<std::time::Instant>,
+    measure_error: Option<String>,
+    header: Option<egui::TextureHandle>,
+    brand_art: Option<egui::TextureHandle>,
+    decorations: Option<egui::TextureHandle>,
+    footer_art: Option<egui::TextureHandle>,
+    preview_fullscreen: bool,
+    window_resize: crate::window_resize::WindowResize,
 }
 
 impl App {
-    pub fn new(initial: Option<PathBuf>) -> Self {
+    pub fn new(initial: Option<PathBuf>, ctx: &egui::Context) -> Self {
         let (tx, rx) = channel();
         App {
             tx,
@@ -79,15 +91,29 @@ impl App {
             play: None,
             play_id: 0,
             muted: false,
+            volume: 100,
             progress: 0.0,
             export_cancel: None,
             measure: None,
             measure_id: 0,
+            estimate_key: None,
+            estimate_deadline: None,
+            measure_error: None,
+            header: crate::theme::load_header(ctx),
+            brand_art: crate::theme::load_brand(ctx),
+            decorations: crate::theme::load_decorations(ctx),
+            footer_art: crate::theme::load_footer(ctx),
+            preview_fullscreen: false,
+            window_resize: Default::default(),
         }
     }
 
     fn load(&mut self, ctx: &egui::Context, path: PathBuf) {
         self.stop_play();
+        self.stop_measure();
+        self.estimate_key = None;
+        self.estimate_deadline = None;
+        self.measure_error = None;
         self.gen += 1;
         self.video = None;
         self.error = None;
@@ -106,7 +132,7 @@ impl App {
         ctx.load_texture(name, img, TextureOptions::LINEAR)
     }
 
-    /// Aggiorna l'anteprima riusando la stessa texture.
+    /// Update the preview by reusing its texture.
     fn set_preview(ctx: &egui::Context, v: &mut Video, f: &easycut_core::frames::Frame) {
         match &mut v.preview {
             Some(t) => t.set(
@@ -144,7 +170,7 @@ impl App {
                     }
                 }
                 Msg::Preview(_, f) => {
-                    // Durante la riproduzione le immagini singole sarebbero vecchie.
+                    // Single-frame previews would be stale during playback.
                     if self.play.is_none() {
                         if let Some(v) = &mut self.video {
                             Self::set_preview(ctx, v, &f);
@@ -170,6 +196,11 @@ impl App {
                         }
                     }
                 }
+                Msg::MeasureFailed(id, error) => {
+                    if self.measure.as_ref().is_some_and(|m| m.id == id) {
+                        self.measure_error = Some(error);
+                    }
+                }
                 Msg::MeasureDone(id) => {
                     if self.measure.as_ref().is_some_and(|m| m.id == id) {
                         self.measure = None;
@@ -190,14 +221,34 @@ impl eframe::App for App {
         if let Some(p) = self.initial.take() {
             self.load(ctx, p);
         }
-        if let Some(p) = ctx.input(|i| i.raw.dropped_files.first().and_then(|f| f.path.clone())) {
+        if let Some(p) = ctx
+            .input(|i| i.raw.dropped_files.first().and_then(|f| f.path.clone()))
+            .filter(|_| !self.exporting)
+        {
             self.load(ctx, p);
         }
         let open_shortcut = egui::KeyboardShortcut::new(egui::Modifiers::COMMAND, egui::Key::O);
-        if ctx.input_mut(|i| i.consume_shortcut(&open_shortcut)) {
+        if !self.exporting && ctx.input_mut(|i| i.consume_shortcut(&open_shortcut)) {
             self.pick_requested = true;
         }
         self.poll(ctx);
+        if self.preview_fullscreen {
+            let frame = self
+                .video
+                .as_ref()
+                .map_or(1.0 / 30.0, |v| 1.0 / v.info.fps.max(1.0));
+            let key = controls::fullscreen_shortcuts(ctx, frame);
+            let clicked = self.fullscreen_preview(ctx);
+            self.apply(
+                ctx,
+                if clicked != Action::None {
+                    clicked
+                } else {
+                    key
+                },
+            );
+            return;
+        }
         self.top_bar(ctx);
         self.bottom_bar(ctx);
         if self
@@ -207,14 +258,7 @@ impl eframe::App for App {
         {
             self.stop_measure();
         }
-        let measuring = self.measure.as_ref().map(|m| (m.done, m.total));
-        let mut panel_action = PanelAction::None;
-        if let Some(v) = &mut self.video {
-            egui::SidePanel::right("formats")
-                .default_width(340.0)
-                .min_width(280.0)
-                .show(ctx, |ui| panel_action = panels::show(ui, v, measuring));
-        }
+        let panel_action = self.export_panel(ctx);
         match panel_action {
             PanelAction::None => {}
             PanelAction::MeasureAll => self.start_measure(ctx, None),
@@ -224,7 +268,11 @@ impl eframe::App for App {
             .video
             .as_ref()
             .map_or(1.0 / 30.0, |v| 1.0 / v.info.fps.max(1.0));
-        let key = controls::shortcuts(ctx, frame);
+        let key = if self.exporting {
+            Action::None
+        } else {
+            controls::shortcuts(ctx, frame)
+        };
         let clicked = self.center(ctx);
         if std::mem::take(&mut self.pick_requested) {
             if let Some(p) = self.pick_video() {
@@ -239,5 +287,7 @@ impl eframe::App for App {
                 key
             },
         );
+        self.update_estimate(ctx);
+        self.window_resize.show(ctx);
     }
 }

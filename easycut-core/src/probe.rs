@@ -6,18 +6,22 @@ use std::path::Path;
 #[derive(Debug, Clone, PartialEq)]
 pub struct VideoInfo {
     pub duration: f64,
-    /// Dimensioni già corrette per la rotazione.
+    /// Dimensions already corrected for rotation.
     pub width: u32,
     pub height: u32,
     pub codec: String,
     pub fps: f64,
     pub size_bytes: u64,
-    /// Bitrate totale del file in bit/s, se noto.
+    /// Total file bitrate in bits/s, if known.
     pub bitrate: Option<u64>,
     pub has_audio: bool,
-    /// Bit per componente del video (8, 10, 12…).
+    /// Type and codec of every track, including unknown tracks.
+    pub tracks: Vec<(String, String)>,
+    /// Original FFmpeg stream indices, aligned with tracks.
+    pub track_indices: Vec<u32>,
+    /// Bits per video component (8, 10, 12…).
     pub bit_depth: u8,
-    /// Rotazione di visualizzazione in gradi antiorari: 0, 90, 180 o 270.
+    /// Display rotation in counterclockwise degrees: 0, 90, 180 or 270.
     pub rotation: u16,
 }
 
@@ -29,8 +33,10 @@ struct Raw {
 
 #[derive(Deserialize)]
 struct RawStream {
+    index: Option<u32>,
     codec_type: Option<String>,
     codec_name: Option<String>,
+    codec_tag_string: Option<String>,
     width: Option<u32>,
     height: Option<u32>,
     r_frame_rate: Option<String>,
@@ -71,7 +77,7 @@ fn parse_fraction(s: &str) -> f64 {
     }
 }
 
-/// Rotazione normalizzata (0/90/180/270, antioraria come la side data di FFmpeg).
+/// Normalized rotation (0/90/180/270), counterclockwise like FFmpeg side data.
 fn rotation(s: &RawStream) -> u16 {
     let from_side = s
         .side_data_list
@@ -79,7 +85,7 @@ fn rotation(s: &RawStream) -> u16 {
         .flatten()
         .filter_map(|d| d.rotation)
         .next();
-    // Il vecchio tag `rotate` è in senso orario.
+    // The legacy `rotate` tag is clockwise.
     let from_tag = s
         .tags
         .as_ref()
@@ -116,16 +122,35 @@ pub fn parse_probe(json: &str) -> Result<VideoInfo> {
         .streams
         .iter()
         .any(|s| s.codec_type.as_deref() == Some("audio"));
+    let track_indices = raw
+        .streams
+        .iter()
+        .enumerate()
+        .map(|(i, stream)| stream.index.unwrap_or(i as u32))
+        .collect();
+    let tracks = raw
+        .streams
+        .iter()
+        .map(|s| {
+            (
+                s.codec_type.clone().unwrap_or_default(),
+                s.codec_name
+                    .clone()
+                    .or_else(|| s.codec_tag_string.clone())
+                    .unwrap_or_default(),
+            )
+        })
+        .collect();
     let video = raw
         .streams
         .into_iter()
         .find(|s| s.codec_type.as_deref() == Some("video"))
-        .ok_or_else(|| Error::BadProbe("nessuno stream video".into()))?;
+        .ok_or_else(|| Error::BadProbe("no video stream".into()))?;
     let duration = raw
         .format
         .duration
         .and_then(|d| d.parse().ok())
-        .ok_or_else(|| Error::BadProbe("durata mancante".into()))?;
+        .ok_or_else(|| Error::BadProbe("missing duration".into()))?;
     let (mut width, mut height) = (video.width.unwrap_or(0), video.height.unwrap_or(0));
     let rotation = rotation(&video);
     let bit_depth = bit_depth(&video);
@@ -141,6 +166,8 @@ pub fn parse_probe(json: &str) -> Result<VideoInfo> {
         size_bytes: raw.format.size.and_then(|s| s.parse().ok()).unwrap_or(0),
         bitrate: raw.format.bit_rate.and_then(|s| s.parse().ok()),
         has_audio,
+        tracks,
+        track_indices,
         bit_depth,
         rotation,
     })
@@ -168,7 +195,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn legge_info_video() {
+    fn preserve_stream_indices_and_show_timecode_tags() {
+        let info = parse_probe(r#"{"streams":[{"index":0,"codec_type":"video","codec_name":"h264"},{"index":4,"codec_type":"data","codec_tag_string":"tmcd"}],"format":{"duration":"1"}}"#).unwrap();
+        assert_eq!(info.track_indices, vec![0, 4]);
+        assert_eq!(info.tracks[1], ("data".into(), "tmcd".into()));
+    }
+
+    #[test]
+    fn parse_video_info() {
         let json = r#"{"streams":[{"codec_type":"audio"},{"codec_type":"video","codec_name":"h264","width":1920,"height":1080,"r_frame_rate":"30000/1001"}],"format":{"duration":"12.5","size":"1000","bit_rate":"640"}}"#;
         let info = parse_probe(json).unwrap();
         assert_eq!((info.width, info.height), (1920, 1080));
@@ -181,7 +215,7 @@ mod tests {
     }
 
     #[test]
-    fn rotazione_scambia_le_dimensioni() {
+    fn rotation_swaps_dimensions() {
         let json = r#"{"streams":[{"codec_type":"video","codec_name":"h264","width":1920,"height":1080,"side_data_list":[{"rotation":-90}]}],"format":{"duration":"1"}}"#;
         let info = parse_probe(json).unwrap();
         assert_eq!((info.width, info.height), (1080, 1920));
@@ -190,7 +224,7 @@ mod tests {
     }
 
     #[test]
-    fn rotazione_e_profondita_colore() {
+    fn rotation_and_bit_depth() {
         let s = |extra: &str| {
             format!(
                 r#"{{"streams":[{{"codec_type":"video","width":4,"height":2{extra}}}],"format":{{"duration":"1"}}}}"#
@@ -206,7 +240,7 @@ mod tests {
         ))
         .unwrap();
         assert_eq!((i.bit_depth, i.rotation, i.width), (8, 180, 4));
-        // Il tag `rotate` è orario: 90 orario = 270 antiorario.
+        // The `rotate` tag is clockwise: 90 clockwise = 270 counterclockwise.
         let i = parse_probe(&s(r#","pix_fmt":"p010le","tags":{"rotate":"90"}"#)).unwrap();
         assert_eq!((i.bit_depth, i.rotation), (10, 270));
         let i = parse_probe(&s(r#","pix_fmt":"yuv420p","bits_per_raw_sample":"10""#)).unwrap();
@@ -214,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn senza_video_e_errore() {
+    fn missing_video_returns_error() {
         let json = r#"{"streams":[{"codec_type":"audio"}],"format":{"duration":"1"}}"#;
         assert!(parse_probe(json).is_err());
     }

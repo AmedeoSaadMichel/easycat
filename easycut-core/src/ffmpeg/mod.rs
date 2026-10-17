@@ -1,5 +1,5 @@
 // File: easycut-core/src/ffmpeg/mod.rs
-//! Unico modulo che sa come invocare FFmpeg per esportare e misurare.
+//! FFmpeg process boundary for export and measurement.
 mod args;
 
 pub use args::{backends, build_args, hardware_encoder, job_duration, Backend};
@@ -33,7 +33,7 @@ pub(crate) fn run_capture(program: &'static str, args: &[String]) -> Result<Stri
     run_capture_bytes(program, args).map(|b| String::from_utf8_lossy(&b).into_owned())
 }
 
-/// Encoder disponibili nell'installazione di FFmpeg.
+/// Encoders available in the installed FFmpeg build.
 pub fn available_encoders() -> HashSet<String> {
     let args = ["-hide_banner".to_string(), "-encoders".to_string()];
     run_capture("ffmpeg", &args)
@@ -53,22 +53,22 @@ pub fn available_encoders() -> HashSet<String> {
         .unwrap_or_default()
 }
 
-/// Esegue il job e ritorna il backend effettivamente usato.
+/// Run the job and return the backend actually used.
 pub fn run(job: &Job, info: &VideoInfo) -> Result<Backend> {
     run_with_progress(job, info, &mut |_| {}, &AtomicBool::new(false))
 }
 
-/// Come `run`, ma riporta l'avanzamento (0..1) e può essere annullato con `cancel`.
-/// Prova i backend in ordine (chip, encoder hardware, software) finché uno riesce.
-/// In caso di errore o annullamento rimuove l'output parziale.
+/// Like `run`, with progress (0..1) and cancellation through `cancel`.
+/// Try backends in order (full hardware, hardware encoder, software) until success.
+/// Remove partial output on failure or cancellation.
 pub fn run_with_progress(
     job: &Job,
     info: &VideoInfo,
     progress: &mut dyn FnMut(f64),
     cancel: &AtomicBool,
 ) -> Result<Backend> {
-    // Validazione prima di toccare il disco: un job rifiutato non deve mai
-    // cancellare nulla (l'output potrebbe coincidere con l'origine).
+    // Validate before touching disk: a rejected job must never
+    // delete anything (the output might be the input).
     build_args(job, info, Backend::Software)?;
     let mut first_err = None;
     for backend in backends(&job.mode, info) {
@@ -97,7 +97,7 @@ fn run_once(
 ) -> Result<()> {
     let duration = job_duration(job, info);
     let mut args = build_args(job, info, backend)?;
-    // Opzioni globali: avanzamento in formato chiave=valore su stdout.
+    // Global options: key=value progress on stdout.
     args.splice(
         1..1,
         ["-progress".to_string(), "pipe:1".into(), "-nostats".into()],
@@ -112,14 +112,14 @@ fn run_once(
             program: "ffmpeg",
             source,
         })?;
-    // stderr va svuotato in parallelo, altrimenti FFmpeg si blocca a buffer pieno.
-    let mut stderr = child.stderr.take().expect("stderr è piped");
+    // Drain stderr concurrently to avoid blocking FFmpeg on a full pipe.
+    let mut stderr = child.stderr.take().expect("stderr is piped");
     let err_reader = std::thread::spawn(move || {
         let mut s = String::new();
         let _ = stderr.read_to_string(&mut s);
         s
     });
-    let stdout = child.stdout.take().expect("stdout è piped");
+    let stdout = child.stdout.take().expect("stdout is piped");
     for line in BufReader::new(stdout).lines().map_while(|l| l.ok()) {
         if cancel.load(Ordering::Relaxed) {
             let _ = child.kill();
@@ -153,13 +153,79 @@ fn run_once(
     Ok(())
 }
 
-/// Byte prodotti codificando solo il video di un breve tratto.
+/// Drain both pipes concurrently and check cancellation every 20 ms.
+fn capture_sample(args: &[String], cancel: &AtomicBool) -> Result<u64> {
+    if cancel.load(Ordering::Relaxed) {
+        return Err(Error::Cancelled);
+    }
+    let mut child = Command::new("ffmpeg")
+        .args(args)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|source| Error::Spawn {
+            program: "ffmpeg",
+            source,
+        })?;
+    // Both pipes exist because they were configured with Stdio::piped().
+    let mut stdout = child.stdout.take().expect("stdout is piped");
+    let mut stderr = child.stderr.take().expect("stderr is piped");
+    std::thread::scope(|scope| {
+        let output = scope.spawn(move || std::io::copy(&mut stdout, &mut std::io::sink()));
+        let errors = scope.spawn(move || {
+            let mut text = String::new();
+            let _ = stderr.read_to_string(&mut text);
+            text
+        });
+        let status = loop {
+            if cancel.load(Ordering::Relaxed) {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err(Error::Cancelled);
+            }
+            match child.try_wait() {
+                Ok(Some(status)) => break status,
+                Ok(None) => std::thread::sleep(std::time::Duration::from_millis(20)),
+                Err(source) => {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err(Error::Spawn {
+                        program: "ffmpeg",
+                        source,
+                    });
+                }
+            }
+        };
+        let stderr = errors.join().unwrap_or_default();
+        if cancel.load(Ordering::Relaxed) {
+            return Err(Error::Cancelled);
+        }
+        if !status.success() {
+            return Err(Error::Failed {
+                program: "ffmpeg",
+                status: status.to_string(),
+                stderr,
+            });
+        }
+        output
+            .join()
+            .unwrap_or_else(|_| Err(std::io::Error::other("sample reader interrupted")))
+            .map_err(|source| Error::Spawn {
+                program: "ffmpeg",
+                source,
+            })
+    })
+}
+
+/// Bytes produced by encoding only the video of a sample window.
 fn sample_bytes(
     input: &Path,
     info: &VideoInfo,
     (start, len): (f64, f64),
     s: &Settings,
     backend: Backend,
+    cancel: &AtomicBool,
 ) -> Result<u64> {
     let mut a: Vec<String> = vec!["-v".into(), "error".into()];
     a.extend(args::input_args(backend));
@@ -175,11 +241,11 @@ fn sample_bytes(
     }
     a.extend(args::video_args(s, backend));
     a.extend(["-an", "-f", "matroska", "pipe:1"].map(String::from));
-    run_capture_bytes("ffmpeg", &a).map(|b| b.len() as u64)
+    capture_sample(&a, cancel)
 }
 
-/// Misura la dimensione finale codificando alcuni campioni del tratto scelto,
-/// con la stessa catena di backend dell'esportazione.
+/// Estimate output size by encoding sample windows within the selection,
+/// using the same backend fallback chain as export.
 pub fn measure_size(
     input: &Path,
     info: &VideoInfo,
@@ -192,21 +258,29 @@ pub fn measure_size(
     }
     let (range_start, secs) = trim.map_or((0.0, info.duration), |t| (t.start, t.duration()));
     let chain = backends(&crate::job::Mode::Transcode(*s), info);
-    let mut samples = Vec::new();
-    for sample in sample_plan(range_start, secs) {
-        if cancel.load(Ordering::Relaxed) {
-            return Err(Error::Cancelled);
-        }
-        let mut result = Err(Error::Cancelled);
-        for &b in &chain {
-            result = sample_bytes(input, info, sample, s, b);
-            if result.is_ok() {
-                break;
+    let plan = sample_plan(range_start, secs);
+    let mut last_error = Error::Cancelled;
+    for backend in chain {
+        let mut samples = Vec::new();
+        for &sample in &plan {
+            if cancel.load(Ordering::Relaxed) {
+                return Err(Error::Cancelled);
+            }
+            match sample_bytes(input, info, sample, s, backend, cancel) {
+                Ok(bytes) => samples.push((bytes, sample.1)),
+                Err(Error::Cancelled) => return Err(Error::Cancelled),
+                Err(error) => {
+                    last_error = error;
+                    break;
+                }
             }
         }
-        samples.push((result?, sample.1));
+        // Every sample must use the same backend; never mix hardware/software bitrates.
+        if samples.len() == plan.len() {
+            return Ok(from_samples(&samples, info, s, secs));
+        }
     }
-    Ok(from_samples(&samples, info, s, secs))
+    Err(last_error)
 }
 
 #[cfg(test)]
@@ -215,9 +289,45 @@ mod tests {
     use crate::job::Mode;
 
     #[test]
-    fn run_con_output_uguale_input_non_cancella_il_file() {
+    fn running_sample_cancels_without_waiting_for_completion() {
+        let cancel = AtomicBool::new(false);
+        let args: Vec<String> = [
+            "-v",
+            "error",
+            "-re",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=size=64x64:rate=10",
+            "-t",
+            "10",
+            "-an",
+            "-c:v",
+            "rawvideo",
+            "-f",
+            "nut",
+            "pipe:1",
+        ]
+        .map(String::from)
+        .to_vec();
+        let start = std::time::Instant::now();
+        std::thread::scope(|scope| {
+            scope.spawn(|| {
+                std::thread::sleep(std::time::Duration::from_millis(150));
+                cancel.store(true, Ordering::Relaxed);
+            });
+            assert!(matches!(
+                capture_sample(&args, &cancel),
+                Err(Error::Cancelled)
+            ));
+        });
+        assert!(start.elapsed() < std::time::Duration::from_secs(2));
+    }
+
+    #[test]
+    fn rejected_same_input_output_does_not_delete_file() {
         let path = std::env::temp_dir().join(format!("easycut-test-{}.bin", std::process::id()));
-        std::fs::write(&path, b"dati").unwrap();
+        std::fs::write(&path, b"data").unwrap();
         let j = Job {
             input: path.clone(),
             output: path.clone(),
@@ -233,6 +343,8 @@ mod tests {
             size_bytes: 4,
             bitrate: None,
             has_audio: false,
+            tracks: Vec::new(),
+            track_indices: Vec::new(),
             bit_depth: 8,
             rotation: 0,
         };

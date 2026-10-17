@@ -1,5 +1,5 @@
 // File: easycut-core/src/estimate.rs
-//! Stima della dimensione del file finale (euristica, non una misura).
+//! Initial output size heuristic, refined separately using encoded samples.
 use crate::job::{Codec, Container, Mode, RateControl, Settings, Speed, Trim};
 use crate::probe::VideoInfo;
 
@@ -14,7 +14,7 @@ pub fn audio_kbps(container: Container) -> f64 {
     }
 }
 
-/// (bit per pixel per frame, CRF di riferimento) per un contenuto "tipico".
+/// (bits per pixel per frame, reference CRF) for typical content.
 fn reference(codec: Codec) -> (f64, f64) {
     match codec {
         Codec::H264 => (0.07, 23.0),
@@ -24,7 +24,7 @@ fn reference(codec: Codec) -> (f64, f64) {
     }
 }
 
-/// Altezza effettiva di uscita: mai oltre l'origine.
+/// Effective output height, never larger than the source.
 pub fn output_height(info: &VideoInfo, s: &Settings) -> u32 {
     s.height.map_or(info.height, |h| h.min(info.height))
 }
@@ -42,11 +42,11 @@ fn selected_duration(info: &VideoInfo, trim: Option<Trim>) -> f64 {
     trim.map_or(info.duration, |t| t.duration()).max(0.0)
 }
 
-/// Dimensione stimata in byte del risultato di `mode` sul tratto `trim`.
+/// Estimated output bytes for `mode` within `trim`.
 pub fn estimate_bytes(info: &VideoInfo, mode: &Mode, trim: Option<Trim>) -> u64 {
     let secs = selected_duration(info, trim);
     match mode {
-        Mode::Copy => {
+        Mode::Copy | Mode::Remux(_) | Mode::RemuxSelected { .. } => {
             if info.duration <= 0.0 {
                 return 0;
             }
@@ -69,14 +69,14 @@ fn transcode_bytes(info: &VideoInfo, s: &Settings, secs: f64) -> u64 {
             let pixels_per_sec = w as f64 * h as f64 * info.fps.max(1.0);
             let (bpp, ref_crf) = reference(s.codec);
             let mut video_bps = pixels_per_sec * bpp * 2f64.powf((ref_crf - crf as f64) / 6.0);
-            // Non può superare di molto quanto il sorgente usa già.
+            // Limit the heuristic relative to the existing source bitrate.
             if let Some(total) = info.bitrate {
                 let src_video = (total as f64 - audio_bps).max(total as f64 * 0.5);
                 let src_pixels = info.width as f64 * info.height as f64;
                 let ratio = (w as f64 * h as f64 / src_pixels.max(1.0)).powf(0.75);
                 video_bps = video_bps.min(src_video * ratio);
             }
-            // Preset più lenti comprimono meglio (vale solo per il software).
+            // Slower presets compress better (software encoders only).
             let hw = s.hardware
                 && matches!(s.codec, Codec::H264 | Codec::H265)
                 && cfg!(target_os = "macos");
@@ -87,7 +87,7 @@ fn transcode_bytes(info: &VideoInfo, s: &Settings, secs: f64) -> u64 {
                     Speed::Small => 0.92,
                 };
             }
-            // L'encoder hardware è meno efficiente di quello software.
+            // Hardware encoding is typically less space-efficient than software.
             if s.hardware
                 && matches!(s.codec, Codec::H264 | Codec::H265)
                 && cfg!(target_os = "macos")
@@ -99,16 +99,16 @@ fn transcode_bytes(info: &VideoInfo, s: &Settings, secs: f64) -> u64 {
     }
 }
 
-/// Durata di ciascun campione misurato.
-pub const SAMPLE_SECS: f64 = 3.0;
+/// Length of each encoded sample.
+pub const SAMPLE_SECS: f64 = 6.0;
 
-/// Tratti (inizio assoluto, durata) da codificare per misurare la dimensione:
-/// tre campioni a 15%, 50% e 85% del tratto, oppure tutto se è breve.
+/// Sample windows (absolute start, duration) used to estimate output size:
+/// five six-second samples at 10%, 30%, 50%, 70%, 90%; encode clips up to 30 s whole.
 pub fn sample_plan(range_start: f64, secs: f64) -> Vec<(f64, f64)> {
-    if secs <= SAMPLE_SECS * 2.0 {
+    if secs <= SAMPLE_SECS * 5.0 {
         return vec![(range_start, secs.max(0.0))];
     }
-    [0.15, 0.5, 0.85]
+    [0.1, 0.3, 0.5, 0.7, 0.9]
         .iter()
         .map(|f| {
             let centre = range_start + secs * f;
@@ -119,8 +119,8 @@ pub fn sample_plan(range_start: f64, secs: f64) -> Vec<(f64, f64)> {
         .collect()
 }
 
-/// Dimensione totale prevista a partire dai campioni misurati `(byte, secondi)`.
-/// I campioni sono solo video: l'audio si aggiunge a bitrate noto.
+/// Project total size from measured `(bytes, seconds)` samples.
+/// Samples contain video only; add audio using the configured bitrate.
 pub fn from_samples(samples: &[(u64, f64)], info: &VideoInfo, s: &Settings, secs: f64) -> u64 {
     let bytes: u64 = samples.iter().map(|(b, _)| b).sum();
     let dur: f64 = samples.iter().map(|(_, d)| d).sum();
@@ -149,6 +149,8 @@ mod tests {
             size_bytes: 100_000_000,
             bitrate: Some(8_000_000),
             has_audio: true,
+            tracks: Vec::new(),
+            track_indices: Vec::new(),
             bit_depth: 8,
             rotation: 0,
         }
@@ -166,7 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn copy_e_proporzionale_al_taglio() {
+    fn copy_estimate_scales_with_trim() {
         let t = Trim {
             start: 0.0,
             end: 25.0,
@@ -175,34 +177,34 @@ mod tests {
     }
 
     #[test]
-    fn h265_e_piu_piccolo_di_h264() {
+    fn h265_estimate_is_smaller_than_h264() {
         let a = estimate_bytes(&info(), &crf(Codec::H264, None, 23), None);
         let b = estimate_bytes(&info(), &crf(Codec::H265, None, 28), None);
         assert!(b < a, "{b} < {a}");
     }
 
     #[test]
-    fn risoluzione_minore_riduce_la_stima() {
+    fn lower_resolution_reduces_estimate() {
         let a = estimate_bytes(&info(), &crf(Codec::H264, None, 23), None);
         let b = estimate_bytes(&info(), &crf(Codec::H264, Some(480), 23), None);
         assert!(b < a);
     }
 
     #[test]
-    fn crf_piu_alto_riduce_la_stima() {
+    fn higher_crf_reduces_estimate() {
         let a = estimate_bytes(&info(), &crf(Codec::H264, Some(720), 20), None);
         let b = estimate_bytes(&info(), &crf(Codec::H264, Some(720), 28), None);
         assert!(b < a);
     }
 
     #[test]
-    fn non_supera_il_sorgente() {
+    fn estimate_does_not_exceed_source() {
         let e = estimate_bytes(&info(), &crf(Codec::H264, None, 10), None);
         assert!(e <= 100_000_000, "{e}");
     }
 
     #[test]
-    fn velocita_veloce_produce_file_piu_grandi() {
+    fn fast_preset_estimates_larger_files() {
         let mode = |speed| {
             Mode::Transcode(Settings {
                 codec: Codec::H265,
@@ -219,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn target_rispetta_la_dimensione_richiesta() {
+    fn target_preserves_requested_size() {
         let m = Mode::Transcode(Settings {
             codec: Codec::H264,
             container: Container::Mp4,
@@ -232,21 +234,31 @@ mod tests {
     }
 
     #[test]
-    fn piano_campioni_breve_codifica_tutto() {
+    fn samples_cover_short_clips_without_restarting_the_encoder() {
+        assert_eq!(sample_plan(7.0, 25.0), vec![(7.0, 25.0)]);
+        let plan = sample_plan(10.0, 300.0);
+        assert_eq!(plan.len(), 5);
+        assert!(plan.iter().all(|(_, duration)| *duration >= 6.0));
+        assert!(plan.first().unwrap().0 < 50.0);
+        assert!(plan.last().unwrap().0 > 250.0);
+    }
+
+    #[test]
+    fn short_sample_plan_encodes_whole_range() {
         assert_eq!(sample_plan(2.0, 5.0), vec![(2.0, 5.0)]);
     }
 
     #[test]
-    fn piano_campioni_resta_dentro_il_tratto() {
+    fn sample_plan_stays_within_selection() {
         let plan = sample_plan(10.0, 60.0);
-        assert_eq!(plan.len(), 3);
+        assert_eq!(plan.len(), 5);
         for (start, len) in plan {
             assert!(start >= 10.0 && start + len <= 70.0 + 1e-9, "{start}+{len}");
         }
     }
 
     #[test]
-    fn da_campioni_scala_alla_durata_e_somma_audio() {
+    fn sample_projection_adds_audio_and_scales_duration() {
         let i = info();
         let s = Settings {
             codec: Codec::H264,
@@ -256,7 +268,7 @@ mod tests {
             hardware: false,
             speed: Speed::Balanced,
         };
-        // 1 MB ogni 3 s di video, su 30 s: 10 MB + 128 kbps di audio (480 kB)
+        // 1 MB per 3 s of video over 30 s: 10 MB + 128 kbps audio (480 kB)
         let est = from_samples(&[(1_000_000, 3.0)], &i, &s, 30.0);
         assert_eq!(est, 10_000_000 + 480_000);
     }

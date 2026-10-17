@@ -1,0 +1,443 @@
+{
+  "cpu": "Apple M4",
+  "date": "2026-10-16",
+  "ffmpeg": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "fps": 30,
+  "repetitions": 5,
+  "results": [
+    {
+      "chip_median": 1.253891334,
+      "chip_seconds": [
+        1.232465834,
+        1.236889834,
+        1.253891334,
+        1.257418209,
+        1.261695166
+      ],
+      "hardware_median": 1.211810291,
+      "hardware_seconds": [
+        1.196694041,
+        1.205942791,
+        1.211810291,
+        1.237554417,
+        1.259994792
+      ],
+      "output_bytes": [
+        3910405,
+        3910405
+      ],
+      "output_codec": "H.264",
+      "output_height": 1080,
+      "source_codec": "h264",
+      "source_size": "1080p",
+      "speedup": 0.9664396412520385
+    },
+    {
+      "chip_median": 0.860296917,
+      "chip_seconds": [
+        0.798908958,
+        0.848689667,
+        0.860296917,
+        0.880665875,
+        0.88739025
+      ],
+      "hardware_median": 0.679447834,
+      "hardware_seconds": [
+        0.665370042,
+        0.668756416,
+        0.679447834,
+        0.687716291,
+        0.721008208
+      ],
+      "output_bytes": [
+        2125204,
+        2376551
+      ],
+      "output_codec": "H.264",
+      "output_height": 720,
+      "source_codec": "h264",
+      "source_size": "1080p",
+      "speedup": 0.7897829465312382
+    },
+    {
+      "chip_median": 1.30905275,
+      "chip_seconds": [
+        1.290302083,
+        1.3072943750000001,
+        1.30905275,
+        1.3129690840000001,
+        1.3302607499999999
+      ],
+      "hardware_median": 1.283473791,
+      "hardware_seconds": [
+        1.2643419169999999,
+        1.281578084,
+        1.283473791,
+        1.2914375,
+        1.301447875
+      ],
+      "output_bytes": [
+        4742445,
+        4742445
+      ],
+      "output_codec": "H.265",
+      "output_height": 1080,
+      "source_codec": "h264",
+      "source_size": "1080p",
+      "speedup": 0.980459947851605
+    },
+    {
+      "chip_median": 0.890408208,
+      "chip_seconds": [
+        0.86867725,
+        0.880455083,
+        0.890408208,
+        0.896140542,
+        0.9052665
+      ],
+      "hardware_median": 0.802363375,
+      "hardware_seconds": [
+        0.7847295,
+        0.792818167,
+        0.802363375,
+        0.810712125,
+        0.854583917
+      ],
+      "output_bytes": [
+        1540999,
+        1722467
+      ],
+      "output_codec": "H.265",
+      "output_height": 720,
+      "source_codec": "h264",
+      "source_size": "1080p",
+      "speedup": 0.9011185743696558
+    },
+    {
+      "chip_median": 1.234121625,
+      "chip_seconds": [
+        1.222094875,
+        1.231813541,
+        1.234121625,
+        1.243037459,
+        1.249481833
+      ],
+      "hardware_median": 1.192692792,
+      "hardware_seconds": [
+        1.187938916,
+        1.188388667,
+        1.192692792,
+        1.204415041,
+        1.230317041
+      ],
+      "output_bytes": [
+        3919880,
+        3919880
+      ],
+      "output_codec": "H.264",
+      "output_height": 1080,
+      "source_codec": "hevc",
+      "source_size": "1080p",
+      "speedup": 0.96643051044503
+    },
+    {
+      "chip_median": 0.751506834,
+      "chip_seconds": [
+        0.732366334,
+        0.74875075,
+        0.751506834,
+        0.769141166,
+        0.784273833
+      ],
+      "hardware_median": 0.707134625,
+      "hardware_seconds": [
+        0.695764459,
+        0.706822083,
+        0.707134625,
+        0.710135916,
+        0.757286792
+      ],
+      "output_bytes": [
+        2178726,
+        2303012
+      ],
+      "output_codec": "H.264",
+      "output_height": 720,
+      "source_codec": "hevc",
+      "source_size": "1080p",
+      "speedup": 0.9409556813158668
+    },
+    {
+      "chip_median": 1.309774875,
+      "chip_seconds": [
+        1.292625625,
+        1.303103792,
+        1.309774875,
+        1.312043375,
+        1.326872291
+      ],
+      "hardware_median": 1.275514833,
+      "hardware_seconds": [
+        1.258714666,
+        1.266551083,
+        1.275514833,
+        1.28109425,
+        1.293509875
+      ],
+      "output_bytes": [
+        4987424,
+        4987424
+      ],
+      "output_codec": "H.265",
+      "output_height": 1080,
+      "source_codec": "hevc",
+      "source_size": "1080p",
+      "speedup": 0.9738428010386135
+    },
+    {
+      "chip_median": 0.86272225,
+      "chip_seconds": [
+        0.858996083,
+        0.862019541,
+        0.86272225,
+        0.872856625,
+        0.884104209
+      ],
+      "hardware_median": 0.799633584,
+      "hardware_seconds": [
+        0.783764959,
+        0.785142917,
+        0.799633584,
+        0.806057708,
+        0.853632834
+      ],
+      "output_bytes": [
+        1590324,
+        1656519
+      ],
+      "output_codec": "H.265",
+      "output_height": 720,
+      "source_codec": "hevc",
+      "source_size": "1080p",
+      "speedup": 0.9268725641421673
+    },
+    {
+      "chip_median": 4.192396584,
+      "chip_seconds": [
+        4.186059375,
+        4.190362083,
+        4.192396584,
+        4.194887625,
+        4.197097833
+      ],
+      "hardware_median": 4.160644208,
+      "hardware_seconds": [
+        4.1503816669999996,
+        4.152956,
+        4.160644208,
+        4.169624583,
+        4.19054575
+      ],
+      "output_bytes": [
+        15908852,
+        15908852
+      ],
+      "output_codec": "H.264",
+      "output_height": 2160,
+      "source_codec": "h264",
+      "source_size": "4K",
+      "speedup": 0.9924261993435495
+    },
+    {
+      "chip_median": 2.038734,
+      "chip_seconds": [
+        1.9878020840000001,
+        2.024173625,
+        2.038734,
+        2.0401515,
+        2.052186709
+      ],
+      "hardware_median": 0.756487833,
+      "hardware_seconds": [
+        0.737232625,
+        0.739584166,
+        0.756487833,
+        0.768590958,
+        0.78017825
+      ],
+      "output_bytes": [
+        923694,
+        984451
+      ],
+      "output_codec": "H.264",
+      "output_height": 720,
+      "source_codec": "h264",
+      "source_size": "4K",
+      "speedup": 0.3710576431255868
+    },
+    {
+      "chip_median": 4.349033375,
+      "chip_seconds": [
+        4.330174792,
+        4.341527041,
+        4.349033375,
+        4.357166458,
+        4.360051958
+      ],
+      "hardware_median": 4.334155125,
+      "hardware_seconds": [
+        4.316899166,
+        4.32986525,
+        4.334155125,
+        4.335550917,
+        4.337432291
+      ],
+      "output_bytes": [
+        10618673,
+        10618673
+      ],
+      "output_codec": "H.265",
+      "output_height": 2160,
+      "source_codec": "h264",
+      "source_size": "4K",
+      "speedup": 0.9965789524436564
+    },
+    {
+      "chip_median": 2.081146917,
+      "chip_seconds": [
+        2.002842,
+        2.032076417,
+        2.081146917,
+        2.0885035,
+        2.111750208
+      ],
+      "hardware_median": 0.869923375,
+      "hardware_seconds": [
+        0.83897,
+        0.85960125,
+        0.869923375,
+        0.91072475,
+        0.913683916
+      ],
+      "output_bytes": [
+        960918,
+        858800
+      ],
+      "output_codec": "H.265",
+      "output_height": 720,
+      "source_codec": "h264",
+      "source_size": "4K",
+      "speedup": 0.41800190457192987
+    },
+    {
+      "chip_median": 4.16601175,
+      "chip_seconds": [
+        4.157506125,
+        4.163518375,
+        4.16601175,
+        4.175179292,
+        4.185494083
+      ],
+      "hardware_median": 4.182552916,
+      "hardware_seconds": [
+        4.151959125,
+        4.157613042,
+        4.182552916,
+        4.216710208,
+        4.2365695
+      ],
+      "output_bytes": [
+        14219802,
+        14219802
+      ],
+      "output_codec": "H.264",
+      "output_height": 2160,
+      "source_codec": "hevc",
+      "source_size": "4K",
+      "speedup": 1.0039705039238067
+    },
+    {
+      "chip_median": 1.9510304170000001,
+      "chip_seconds": [
+        1.8019773749999999,
+        1.8629685409999999,
+        1.9510304170000001,
+        1.9605060829999998,
+        2.028418125
+      ],
+      "hardware_median": 0.94760325,
+      "hardware_seconds": [
+        0.924488208,
+        0.929794541,
+        0.94760325,
+        0.964007084,
+        1.0789374999999999
+      ],
+      "output_bytes": [
+        933037,
+        909632
+      ],
+      "output_codec": "H.264",
+      "output_height": 720,
+      "source_codec": "hevc",
+      "source_size": "4K",
+      "speedup": 0.48569373483017303
+    },
+    {
+      "chip_median": 4.323093792,
+      "chip_seconds": [
+        4.301598209,
+        4.305759125,
+        4.323093792,
+        4.3473215,
+        4.379289167
+      ],
+      "hardware_median": 4.34219075,
+      "hardware_seconds": [
+        4.302437542,
+        4.308426709,
+        4.34219075,
+        4.3899775,
+        4.417973041
+      ],
+      "output_bytes": [
+        12213873,
+        12213873
+      ],
+      "output_codec": "H.265",
+      "output_height": 2160,
+      "source_codec": "hevc",
+      "source_size": "4K",
+      "speedup": 1.0044174285636227
+    },
+    {
+      "chip_median": 1.9483330840000002,
+      "chip_seconds": [
+        1.887804042,
+        1.924134167,
+        1.9483330840000002,
+        2.019799792,
+        2.049756167
+      ],
+      "hardware_median": 1.186718625,
+      "hardware_seconds": [
+        1.154380084,
+        1.18437425,
+        1.186718625,
+        1.267037208,
+        1.3417947080000001
+      ],
+      "output_bytes": [
+        916019,
+        778663
+      ],
+      "output_codec": "H.265",
+      "output_height": 720,
+      "source_codec": "hevc",
+      "source_size": "4K",
+      "speedup": 0.6090943251672463
+    }
+  ],
+  "seconds": 8,
+  "warmups": 1
+}

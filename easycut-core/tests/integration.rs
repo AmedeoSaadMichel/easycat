@@ -1,5 +1,5 @@
 // File: easycut-core/tests/integration.rs
-//! Richiede ffmpeg nel PATH; usa solo clip generate al volo.
+//! Requires FFmpeg on PATH; uses generated clips only.
 use easycut_core::estimate::estimate_bytes;
 use easycut_core::frames::{frame_at, thumb_size};
 use easycut_core::{
@@ -25,30 +25,30 @@ fn clip(name: &str) -> Option<PathBuf> {
 }
 
 #[test]
-fn flusso_completo() {
+fn complete_workflow() {
     let Some(input) = clip("in.mp4") else {
-        eprintln!("ffmpeg non disponibile: test saltato");
+        eprintln!("FFmpeg unavailable: skipping test");
         return;
     };
     let info = probe(&input).unwrap();
     assert_eq!((info.width, info.height), (1280, 720));
     assert!(info.has_audio);
 
-    // Fotogramma: dimensioni coerenti con thumb_size.
+    // Frame dimensions must agree with thumb_size.
     let (w, h) = thumb_size(info.width, info.height, 180);
     let f = frame_at(&input, 5.0, w, h).unwrap();
     assert_eq!(f.rgb.len(), w * h * 3);
 
-    // Streaming: 1 s a 10 fps = circa 10 fotogrammi, e si ferma alla chiusura.
+    // Streaming: 1 s at 10 fps gives about 10 frames; dropping stops the process.
     let mut st = easycut_core::playback::FrameStream::open(&input, 2.0, 1.0, 10.0, w, h).unwrap();
     let mut n = 0;
     while let Some(fr) = st.next_frame() {
         assert_eq!(fr.rgb.len(), w * h * 3);
         n += 1;
     }
-    assert!((9..=11).contains(&n), "fotogrammi {n}");
+    assert!((9..=11).contains(&n), "frames {n}");
 
-    // Taglio senza ricodifica.
+    // Trim without re-encoding.
     let out = input.with_file_name("cut.mp4");
     let trim = Trim {
         start: 2.0,
@@ -64,7 +64,7 @@ fn flusso_completo() {
     let cut = probe(&out).unwrap();
     assert!((cut.duration - 6.0).abs() < 1.5, "durata {}", cut.duration);
 
-    // Ricodifica: ogni preset produce un file valido e la stima è nell'ordine di grandezza.
+    // Every profile must produce valid output and a plausible rough estimate.
     let encoders = ffmpeg::available_encoders();
     for p in presets::builtin(&info, &encoders) {
         let out = input.with_file_name(format!("{}.{}", p.id, p.settings.container.ext()));
@@ -81,11 +81,11 @@ fn flusso_completo() {
         ffmpeg::run(&job, &info).unwrap();
         let real = std::fs::metadata(&out).unwrap().len();
         let est = estimate_bytes(&info, &job.mode, None);
-        eprintln!("{:>14}: stima {:>9} reale {:>9}", p.id, est, real);
+        eprintln!("{:>14}: estimate {:>9}, actual {:>9}", p.id, est, real);
         assert!(probe(&out).unwrap().duration > 11.0);
     }
 
-    // Misura su campioni: vicina alla dimensione reale della stessa codifica.
+    // Sample estimate should approach the actual size with identical settings.
     let s = Settings {
         codec: Codec::H264,
         container: Container::Mp4,
@@ -114,7 +114,7 @@ fn flusso_completo() {
         &job,
         &info,
         &mut |p| {
-            assert!(p >= last, "il progresso non deve tornare indietro");
+            assert!(p >= last, "progress must not move backwards");
             last = p;
         },
         &std::sync::atomic::AtomicBool::new(false),
@@ -122,13 +122,15 @@ fn flusso_completo() {
     .unwrap();
     assert_eq!(last, 1.0);
     let real = std::fs::metadata(&out).unwrap().len() as f64;
-    eprintln!("misurata {measured} reale {real}");
+    let rough = estimate_bytes(&info, &job.mode, None) as f64;
+    eprintln!("rough={rough:.0} bytes, sampled={measured} bytes, actual={real:.0} bytes; rough error={:.1}%, sample error={:.1}%", (rough / real - 1.0).abs() * 100.0, (measured as f64 / real - 1.0).abs() * 100.0);
+    assert!((measured as f64 - real).abs() < (rough - real).abs());
     assert!(
-        (measured as f64 / real - 1.0).abs() < 0.25,
-        "misurata {measured} reale {real}"
+        (measured as f64 / real - 1.0).abs() < 0.05,
+        "measured {measured}, actual {real}"
     );
 
-    // Annullamento: errore dedicato e nessun file parziale.
+    // Cancellation returns a dedicated error and leaves no partial output.
     let out = input.with_file_name("cancel.mp4");
     let job = Job {
         input: input.clone(),
@@ -141,7 +143,7 @@ fn flusso_completo() {
     assert!(matches!(r, Err(easycut_core::Error::Cancelled)));
     assert!(!out.exists());
 
-    // Dimensione target: il risultato deve avvicinarsi al valore richiesto.
+    // Target size: output should approach the requested value.
     let target = 1_500_000u64;
     let out = input.with_file_name("target.mp4");
     let s = Settings {
@@ -160,12 +162,12 @@ fn flusso_completo() {
     };
     ffmpeg::run(&job, &info).unwrap();
     let real = std::fs::metadata(&out).unwrap().len() as f64;
-    eprintln!("target {target} reale {real}");
-    assert!((real / target as f64 - 1.0).abs() < 0.35, "reale {real}");
+    eprintln!("target {target} actual {real}");
+    assert!((real / target as f64 - 1.0).abs() < 0.35, "actual {real}");
     let _ = std::fs::remove_dir_all(out.parent().unwrap());
 }
 
-/// PSNR medio tra due video, calcolato da FFmpeg.
+/// Average PSNR between two videos, computed by FFmpeg.
 fn psnr(a: &std::path::Path, b: &std::path::Path) -> f64 {
     let out = Command::new("ffmpeg")
         .args(["-hide_banner", "-i"])
@@ -185,7 +187,7 @@ fn psnr(a: &std::path::Path, b: &std::path::Path) -> f64 {
 
 #[cfg(target_os = "macos")]
 #[test]
-fn chip_su_video_10_bit_ruotato() {
+fn hardware_pipeline_handles_rotated_10bit_video() {
     let dir = std::env::temp_dir().join(format!("easycut-chip-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let flat = dir.join("flat.mp4");
@@ -220,7 +222,7 @@ fn chip_su_video_10_bit_ruotato() {
             .status()
             .is_ok_and(|s| s.success());
     if !ok {
-        eprintln!("VideoToolbox non disponibile: test saltato");
+        eprintln!("VideoToolbox unavailable: skipping test");
         return;
     }
     let info = probe(&src).unwrap();
@@ -256,8 +258,178 @@ fn chip_su_video_10_bit_ruotato() {
 
     let chip = probe(&chip_out).unwrap();
     assert_eq!((chip.width, chip.height, chip.rotation), (270, 480, 0));
-    // Stessa immagine del percorso software: la rotazione sul chip è corretta.
+    // Compare with software output to verify hardware rotation.
     let p = psnr(&soft_out, &chip_out);
-    assert!(p > 30.0, "PSNR {p}: immagine ruotata in modo diverso");
+    assert!(p > 30.0, "PSNR {p}: rotation mismatch");
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn remux_preserves_video_and_all_audio_tracks() {
+    let input = clip("remux-source.mp4").expect("generate test clip");
+    let multi = input.with_file_name("remux-multi.mp4");
+    assert!(Command::new("ffmpeg")
+        .args(["-v", "error", "-y", "-i"])
+        .arg(&input)
+        .args(["-map", "0:v", "-map", "0:a", "-map", "0:a", "-c", "copy"])
+        .arg(&multi)
+        .status()
+        .unwrap()
+        .success());
+    let fingerprint = |path: &PathBuf| {
+        let out = Command::new("ffmpeg")
+            .args(["-v", "error", "-i"])
+            .arg(path)
+            .args([
+                "-map",
+                "0",
+                "-c",
+                "copy",
+                "-f",
+                "streamhash",
+                "-hash",
+                "sha256",
+                "-",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        out.stdout
+    };
+    let original_hash = fingerprint(&multi);
+    let mut source = multi;
+    for (name, container) in [
+        ("remux.mkv", Container::Mkv),
+        ("remux-back.mp4", Container::Mp4),
+    ] {
+        let output = input.with_file_name(name);
+        let info = probe(&source).unwrap();
+        assert_eq!(info.tracks.len(), 3);
+        let job = Job {
+            input: source,
+            output: output.clone(),
+            trim: None,
+            mode: Mode::Remux(container),
+        };
+        assert_eq!(ffmpeg::run(&job, &info).unwrap(), ffmpeg::Backend::Software);
+        assert_eq!(probe(&output).unwrap().tracks, info.tracks);
+        assert_eq!(fingerprint(&output), original_hash);
+        source = output;
+    }
+    let output = input.with_file_name("remux-invalid.webm");
+    let job = Job {
+        input: source.clone(),
+        output: output.clone(),
+        trim: None,
+        mode: Mode::Remux(Container::Webm),
+    };
+    assert!(ffmpeg::run(&job, &probe(&source).unwrap()).is_err());
+    assert!(!output.exists());
+
+    // A camera-style MOV includes a timecode data track alongside all media streams.
+    let camera = input.with_file_name("camera-timecode.mov");
+    assert!(Command::new("ffmpeg")
+        .args(["-v", "error", "-y", "-i"])
+        .arg(&source)
+        .args(["-map", "0", "-c", "copy", "-timecode", "00:00:00:00"])
+        .arg(&camera)
+        .status()
+        .unwrap()
+        .success());
+    let camera_info = probe(&camera).unwrap();
+    let issues = easycut_core::job::remux_issues(&camera_info, Container::Mkv);
+    assert!(!issues.is_empty());
+    assert!(issues
+        .iter()
+        .all(|issue| issue.kind == "data" && issue.removable));
+    let cleaned = input.with_file_name("camera-clean.mkv");
+    let mut job = Job {
+        input: camera,
+        output: cleaned.clone(),
+        trim: None,
+        mode: Mode::Remux(Container::Mkv),
+    };
+    assert!(ffmpeg::run(&job, &camera_info).is_err());
+    assert!(!cleaned.exists());
+    job.mode = Mode::RemuxSelected {
+        container: Container::Mkv,
+        excluded_tracks: issues.iter().map(|issue| issue.index).collect(),
+    };
+    ffmpeg::run(&job, &camera_info).unwrap();
+    assert_eq!(probe(&cleaned).unwrap().tracks.len(), 3);
+    assert_eq!(fingerprint(&cleaned), original_hash);
+}
+
+#[test]
+fn stratified_samples_estimate_a_trimmed_export_more_accurately_than_the_heuristic() {
+    let dir = std::env::temp_dir().join(format!("easycat-estimate-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let input = dir.join("source.mp4");
+    let output = dir.join("output.mp4");
+    assert!(Command::new("ffmpeg")
+        .args([
+            "-v",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=duration=48:size=640x360:rate=30",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=duration=48",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "ultrafast",
+            "-crf",
+            "18",
+            "-c:a",
+            "aac"
+        ])
+        .arg(&input)
+        .status()
+        .unwrap()
+        .success());
+    let info = probe(&input).unwrap();
+    let settings = Settings {
+        codec: Codec::H264,
+        container: Container::Mp4,
+        height: None,
+        rate: RateControl::Crf(28),
+        hardware: false,
+        speed: Speed::Balanced,
+    };
+    let trim = Some(Trim {
+        start: 6.0,
+        end: 42.0,
+    });
+    let job = Job {
+        input: input.clone(),
+        output: output.clone(),
+        trim,
+        mode: Mode::Transcode(settings),
+    };
+    let rough = estimate_bytes(&info, &job.mode, trim) as f64;
+    let sampled = ffmpeg::measure_size(
+        &input,
+        &info,
+        &settings,
+        trim,
+        &std::sync::atomic::AtomicBool::new(false),
+    )
+    .unwrap() as f64;
+    ffmpeg::run(&job, &info).unwrap();
+    let actual = std::fs::metadata(&output).unwrap().len() as f64;
+    let sample_error = (sampled / actual - 1.0).abs();
+    let rough_error = (rough / actual - 1.0).abs();
+    eprintln!("36-second trim: rough={rough:.0}, sampled={sampled:.0}, actual={actual:.0}; rough error={:.1}%, sample error={:.1}%", rough_error * 100.0, sample_error * 100.0);
+    assert!(sample_error < 0.15, "sample error={sample_error}");
+    assert!(sample_error < rough_error);
+    std::fs::remove_dir_all(dir).unwrap();
 }

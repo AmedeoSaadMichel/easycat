@@ -1,5 +1,5 @@
 // File: easycut-app/src/app/playback.rs
-//! Riproduzione e spostamento della posizione.
+//! Playback and seeking.
 use super::{App, Play};
 use crate::controls::Action;
 use crate::worker::{self, PlayArgs};
@@ -14,8 +14,11 @@ impl App {
         }
     }
 
-    /// Avvia dalla posizione corrente (o dall'inizio del taglio se è fuori).
+    /// Start at the current position, or selection start if out of range.
     pub(super) fn start_play(&mut self, ctx: &egui::Context) {
+        if self.exporting {
+            return;
+        }
         self.stop_play();
         let Some(v) = &mut self.video else { return };
         let t0 = if v.playhead >= v.start && v.playhead < v.end - 0.1 {
@@ -32,7 +35,7 @@ impl App {
             self.play_id,
             t0,
             v.end - t0,
-            self.muted,
+            if self.muted { 0 } else { self.volume },
             stop.clone(),
         );
         worker::spawn_play(args, self.tx.clone(), ctx.clone());
@@ -49,16 +52,29 @@ impl App {
             v.playhead = t.clamp(0.0, v.info.duration);
             v.request_preview(v.playhead);
         }
-        if resume && was_playing {
+        if resume
+            && was_playing
+            && self
+                .video
+                .as_ref()
+                .is_some_and(|v| v.playhead >= v.start && v.playhead < v.end - 0.1)
+        {
             self.start_play(ctx);
         }
     }
 
     pub(super) fn apply(&mut self, ctx: &egui::Context, action: Action) {
+        if action == Action::ToggleFullscreen {
+            if self.preview_fullscreen || (self.video.is_some() && !self.exporting) {
+                self.preview_fullscreen = !self.preview_fullscreen;
+                ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(self.preview_fullscreen));
+            }
+            return;
+        }
         let Some(v) = &mut self.video else { return };
         let (start, end, pos) = (v.start, v.end, v.playhead);
         match action {
-            Action::None => {}
+            Action::None | Action::ToggleFullscreen => {}
             Action::TogglePlay => {
                 if self.play.is_some() {
                     self.stop_play();
@@ -67,6 +83,14 @@ impl App {
                 }
             }
             Action::Seek(t, resume) => self.seek(ctx, t, resume),
+            Action::Skip(dt) => self.seek(ctx, (pos + dt).clamp(start, end), true),
+            Action::SetVolume(volume) => {
+                self.volume = volume;
+                self.muted = false;
+                if self.play.is_some() {
+                    self.start_play(ctx);
+                }
+            }
             Action::Step(dt) => self.seek(ctx, pos + dt, false),
             Action::ToStart => self.seek(ctx, start, false),
             Action::ToEnd => self.seek(ctx, end, false),
