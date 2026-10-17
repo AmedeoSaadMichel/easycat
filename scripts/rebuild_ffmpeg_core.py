@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import tarfile
 import urllib.request
@@ -45,8 +46,13 @@ def main():
         flags += ['--target-os=mingw32', '--arch=x86_64', '--cc=gcc']
     else:
         flags += ['--cc=gcc']
+    bash = shutil.which('bash') or 'bash'
+    make = shutil.which('make') or 'make'
+    if platform.system() == 'Windows':
+        bash = subprocess.check_output(['cygpath', '-w', '/usr/bin/bash.exe'], text=True).strip()
+        make = subprocess.check_output(['cygpath', '-w', '/usr/bin/make.exe'], text=True).strip()
     with (work / 'build.log').open('w') as log:
-        for command in [['bash', './configure', *flags], ['make', '-j4'], ['make', 'install']]:
+        for command in [[bash, './configure', *flags], [make, '-j4'], [make, 'install']]:
             subprocess.run(command, cwd=source, stdout=log, stderr=subprocess.STDOUT, check=True)
     env = os.environ.copy()
     env['PATH'] = str(prefix / 'bin') + os.pathsep + env.get('PATH', '')

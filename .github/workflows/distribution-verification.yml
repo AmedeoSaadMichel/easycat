@@ -1,6 +1,11 @@
 name: Native distribution verification
 on:
   workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options: [both, windows, linux]
+        default: both
 permissions:
   contents: read
 jobs:
@@ -8,15 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-22.04
-            platform: linux
-            archive: easycat-0.1.0-linux-x86_64.tar.gz
-            sha256: c622fa35edff134c57b08f1f10c4edb598131ebdea25cd879d205d49ca5f4ead
-          - os: windows-2022
-            platform: windows
-            archive: easycat-0.1.0-windows-x64.zip
-            sha256: aed0e92984ae15198f060473c46dc742d59aa999762082b6ba4fafd0a47190be
+        include: ${{ fromJSON(inputs.platform == 'windows' && '[{"os":"windows-2022","platform":"windows","archive":"easycat-0.1.0-windows-x64.zip","sha256":"aed0e92984ae15198f060473c46dc742d59aa999762082b6ba4fafd0a47190be"}]' || inputs.platform == 'linux' && '[{"os":"ubuntu-22.04","platform":"linux","archive":"easycat-0.1.0-linux-x86_64.tar.gz","sha256":"c622fa35edff134c57b08f1f10c4edb598131ebdea25cd879d205d49ca5f4ead"}]' || '[{"os":"windows-2022","platform":"windows","archive":"easycat-0.1.0-windows-x64.zip","sha256":"aed0e92984ae15198f060473c46dc742d59aa999762082b6ba4fafd0a47190be"},{"os":"ubuntu-22.04","platform":"linux","archive":"easycat-0.1.0-linux-x86_64.tar.gz","sha256":"c622fa35edff134c57b08f1f10c4edb598131ebdea25cd879d205d49ca5f4ead"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
