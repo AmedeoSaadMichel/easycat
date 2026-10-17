@@ -50,3 +50,7 @@ macOS keeps its native traffic-light controls over a transparent titlebar and fu
 Estimate options now open by clicking the estimate heading (Rough estimate, Sample-based estimate or Requested size). The popup belongs to the estimate section and is disabled during export. The settings panel no longer contains a separate Estimate options row. A layout regression switches from Change container to Compress and checks that settings remain above the estimate.
 
 The current native starting and minimum window size is 1180×850 logical points, based on the approved desktop screenshot. Smaller headless fixtures remain as layout stress tests. The export section disables the panel's automatic separator and retains one explicit rule above the estimate.
+
+## Application icon
+
+`app-icon.png` is a transparent, square mascot icon generated with ImageGen using the existing retina brand atlas as its reference. Prompt: faithfully reproduce only the pink three-eyed cat face, preserving yellow slit-pupil eyes, whiskers, ears, nose, smile and inky contours; no lettering, landscape, panel or shadow; transparent outside the head. The native viewport embeds this icon, and macOS packaging converts it into a multi-resolution ICNS registered in Info.plist.

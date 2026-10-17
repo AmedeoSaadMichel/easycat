@@ -1,6 +1,14 @@
 # easycat
 
+<p align="center"><img src="easycut-app/assets/app-icon.png" width="112" alt="easycat cat icon"></p>
+
 A local Rust desktop app for trimming and compressing videos, with a cosmic native UI. Videos stay on your computer.
+
+## Download
+
+**[Choose your operating system and download easycat →](DOWNLOADS.md)**
+
+A macOS Apple Silicon preview is available. Windows, Linux and Intel Mac installers are not available yet. See the download page for requirements, installation steps and preview limitations.
 
 ## Run
 

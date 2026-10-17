@@ -9,3 +9,5 @@ The DMG contains easycat.app, an Applications shortcut and English installation 
 The staging directory is `target/macos-package`; an existing staging app or output DMG is intentionally not overwritten. Rename previous generated artifacts before packaging another build. System disk-image services may require execution outside a restricted sandbox.
 
 Verification performed: strict recursive code-signature verification; a generated 0.3-second H.264/AAC clip encoded and probed using bundled executables with a system-only PATH; audio playback using bundled ffplay with dummy SDL audio/video drivers; disk-image verification. This is an arm64 build, not an Intel or universal build.
+
+The app now uses the pink cat mascot icon. Packaging generates all standard ICNS representations from `easycut-app/assets/app-icon.png` and registers `easycat.icns` in the bundle metadata. The same PNG is embedded as the native viewport icon for other platforms. GitHub prerelease files are linked from `DOWNLOADS.md`; availability is listed explicitly for each platform.

@@ -111,7 +111,16 @@ export PATH="$contents/Helpers:/usr/bin:/bin:/usr/sbin:/sbin"
 exec "$contents/MacOS/easycat-bin" "$@"
 ''')
     launcher.chmod(0o755)
-    info = {'CFBundleName': 'easycat', 'CFBundleDisplayName': 'easycat', 'CFBundleIdentifier': 'com.easycat.desktop', 'CFBundleExecutable': 'easycat', 'CFBundlePackageType': 'APPL', 'CFBundleShortVersionString': VERSION, 'CFBundleVersion': VERSION, 'LSMinimumSystemVersion': '.'.join(map(str, minimum)), 'NSHighResolutionCapable': True, 'NSPrincipalClass': 'NSApplication', 'NSSupportsAutomaticGraphicsSwitching': True}
+    iconset = STAGE.parent / 'easycat.iconset'
+    iconset.mkdir(exist_ok=True)
+    icon_source = ROOT / 'easycut-app/assets/app-icon.png'
+    for size in [16, 32, 128, 256, 512]:
+        for density in [1, 2]:
+            suffix = '@2x' if density == 2 else ''
+            run('sips', '-z', size * density, size * density, icon_source,
+                '--out', iconset / f'icon_{size}x{size}{suffix}.png')
+    run('iconutil', '-c', 'icns', iconset, '-o', RESOURCES / 'easycat.icns')
+    info = {'CFBundleName': 'easycat', 'CFBundleDisplayName': 'easycat', 'CFBundleIdentifier': 'com.easycat.desktop', 'CFBundleExecutable': 'easycat', 'CFBundleIconFile': 'easycat.icns', 'CFBundlePackageType': 'APPL', 'CFBundleShortVersionString': VERSION, 'CFBundleVersion': VERSION, 'LSMinimumSystemVersion': '.'.join(map(str, minimum)), 'NSHighResolutionCapable': True, 'NSPrincipalClass': 'NSApplication', 'NSSupportsAutomaticGraphicsSwitching': True}
     with (CONTENTS / 'Info.plist').open('wb') as stream:
         plistlib.dump(info, stream)
     for _, dest in queue:

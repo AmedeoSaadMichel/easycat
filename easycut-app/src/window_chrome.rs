@@ -8,11 +8,14 @@ pub fn viewport() -> egui::ViewportBuilder {
 }
 
 fn viewport_for(macos: bool) -> egui::ViewportBuilder {
-    let viewport = egui::ViewportBuilder::default()
+    let mut viewport = egui::ViewportBuilder::default()
         .with_resizable(true)
         .with_inner_size(window_resize::MIN_SIZE)
         .with_min_inner_size(window_resize::MIN_SIZE)
         .with_clamp_size_to_monitor_size(true);
+    if let Ok(icon) = eframe::icon_data::from_png_bytes(include_bytes!("../assets/app-icon.png")) {
+        viewport = viewport.with_icon(icon);
+    }
     if macos {
         viewport
             .with_decorations(true)
@@ -150,6 +153,7 @@ mod tests {
     #[test]
     fn titlebar_configuration_is_themed_on_all_platforms() {
         let mac = viewport_for(true);
+        assert!(mac.icon.is_some());
         assert_eq!(mac.titlebar_shown, Some(false));
         assert_eq!(mac.fullsize_content_view, Some(true));
         assert_eq!(mac.titlebar_buttons_shown, Some(true));
