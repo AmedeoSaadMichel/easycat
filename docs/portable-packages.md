@@ -18,6 +18,10 @@ No user videos or application data are uploaded by easycat. Build-time downloads
 
 ## Release publication
 
-The publish job runs only after both native build jobs pass and uploads archives/checksums to the selected existing prerelease. The workflow has read-only repository access during building; only the publish job has contents-write permission. UI preview artifacts are kept separately and are not uploaded as application downloads.
+The publish job runs only after all selected native build jobs pass and uploads archives/checksums to the selected existing prerelease. The workflow has read-only repository access during building; only the publish job has contents-write permission. UI preview artifacts are kept separately and are not uploaded as application downloads.
 
 These builds are unsigned test previews. CI validates compilation and engine workflows, and Xvfb validates Linux startup/rendering; it does not replace hands-on testing on Windows 10/11 or a range of Linux desktops.
+
+The Linux archive also bundles libxkbcommon-x11 and its non-glibc dependency closure so X11 keyboard initialization does not depend on a separate development package. Package copyright notices and hashes are recorded under Licenses. Every archive records its application source commit and workflow run in build-info.json.
+
+The Windows release uses Rust's static CRT configuration. A PE import-table check rejects executables that still require external VCRUNTIME/MSVCP DLLs. The workflow platform input supports rebuilding one platform independently after both have been initially validated.

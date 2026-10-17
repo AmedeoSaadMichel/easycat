@@ -8,7 +8,7 @@ A local Rust desktop app for trimming and compressing videos, with a cosmic nati
 
 **[Choose your operating system and download easycat →](DOWNLOADS.md)**
 
-A macOS Apple Silicon preview is available. Windows, Linux and Intel Mac installers are not available yet. See the download page for requirements, installation steps and preview limitations.
+Preview downloads are available for macOS Apple Silicon, Windows x64 and Linux x86_64. Intel Mac packages are not available yet. See the download page for requirements, installation steps and validation limits.
 
 ## Run
 
