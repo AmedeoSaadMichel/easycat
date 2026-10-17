@@ -60,7 +60,10 @@
         "block-0.1.6"
       ],
       "files": [],
-      "status": "blocked"
+      "status": "resolved-declaration",
+      "license_notices": [
+        "block-0.1.6/NOTICE.txt"
+      ]
     },
     {
       "repository": "madsmtm/objc2",
@@ -126,7 +129,10 @@
         "dispatch-0.2.0"
       ],
       "files": [],
-      "status": "blocked"
+      "status": "resolved-declaration",
+      "license_notices": [
+        "dispatch-0.2.0/NOTICE.txt"
+      ]
     },
     {
       "repository": "madsmtm/objc2",
@@ -221,7 +227,10 @@
         "hexf-parse-0.2.1"
       ],
       "files": [],
-      "status": "blocked"
+      "status": "resolved-declaration",
+      "license_notices": [
+        "hexf-parse-0.2.1/NOTICE.txt"
+      ]
     },
     {
       "repository": "jni-rs/jni-rs",
@@ -277,7 +286,10 @@
         "malloc_buf-0.0.6"
       ],
       "files": [],
-      "status": "blocked"
+      "status": "resolved-declaration",
+      "license_notices": [
+        "malloc_buf-0.0.6/NOTICE.txt"
+      ]
     },
     {
       "repository": "gfx-rs/wgpu",

@@ -12,8 +12,8 @@ The app includes Rust libraries and fonts with separate licenses. Generated `rus
 
 ## Obtaining corresponding source
 
-For a published release, download the matching third-party source archive and checksums from the **same public release page as the application**. It must contain the precise source revisions, upstream/local patches and build recipes for the bundled copyleft components. A link to upstream HEAD, a recipe list or the easycat repository alone is not a substitute for corresponding source. Do not publish a release until that archive is complete and anonymously available. The preparation report currently distinguishes collected material from unresolved source requirements.
+For a published release, download the matching third-party source archive and checksums from the **same public release page as the application**. It must contain the precise source revisions, upstream/local patches and build recipes for the bundled copyleft components. A link to upstream HEAD, a recipe list or the easycat repository alone is not a substitute for corresponding source. Do not publish a release until that archive is complete and anonymously available. The preparation report records source checksums and the exact scope of native build/runtime verification.
 
-These statements describe third-party rights and the intended distribution structure; they are not a claim that an incomplete preparation bundle is ready for public redistribution.
+The four Rust packages that omit standalone license files have verified MIT or CC0 upstream declarations and complete notices in resolved-crate-licenses. Those notices preserve actual author attribution without inventing copyright years or new license grants.
 
 Upstream information: https://ffmpeg.org/legal.html

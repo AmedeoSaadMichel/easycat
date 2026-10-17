@@ -1,0 +1,302 @@
+{
+  "status": "passed",
+  "ready_for_public_preview": true,
+  "private_app_source_included": false,
+  "license_cases_resolved": [
+    "block-0.1.6",
+    "dispatch-0.2.0",
+    "malloc_buf-0.0.6",
+    "hexf-parse-0.2.1"
+  ],
+  "native_verification": {
+    "linux": {
+      "source_build": {
+        "status": "passed",
+        "platform": "Linux",
+        "source_commit": "669f5ab083c7732c10f1ce9e4f1915960dd88457",
+        "source_sha256": "e6cfdd7b8c708239dcc39a71fc454c44b8c95de7b74d014c2f4ba4e06a6a0c52",
+        "configuration": [
+          "--enable-gpl",
+          "--enable-version3",
+          "--disable-autodetect",
+          "--disable-doc",
+          "--disable-ffplay",
+          "--disable-x86asm",
+          "--enable-shared",
+          "--disable-static",
+          "--prefix=<verification-prefix>",
+          "--cc=gcc"
+        ],
+        "scope": "Native core compilation and encode/decode roundtrip; not a rebuild of BtbN external libraries",
+        "full_upstream_configuration_rebuilt": false
+      },
+      "distributed_tools": {
+        "status": "passed",
+        "platform": "Linux",
+        "codecs": [
+          {
+            "encoder": "libx264",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libx265",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libvpx-vp9",
+            "decoder_roundtrip": "passed",
+            "audio": "libopus"
+          },
+          {
+            "encoder": "libsvtav1",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          }
+        ],
+        "hevc_10bit": "passed",
+        "lossless_remux": "passed",
+        "thumbnail": "passed",
+        "audio_playback": "passed",
+        "tool_sha256": {
+          "ffmpeg": "4987c3c5eea6734eb3acd641602169b320764c5c11634a68df0cdd3a4acfedf8",
+          "ffprobe": "81598a2d0fb0b4331f67e89f88277375c75ed946899cf27721252a609883e621",
+          "ffplay": "069a9b09c7e273ef379148c2b9e4aca7ee45f45cdb5a217db0bd4be2c5a68fae"
+        },
+        "scope": "Actual distributed executable codec/export tests; headless audio, not interactive desktop playback"
+      }
+    },
+    "windows": {
+      "source_build": {
+        "status": "passed",
+        "platform": "Windows",
+        "source_commit": "669f5ab083c7732c10f1ce9e4f1915960dd88457",
+        "source_sha256": "e6cfdd7b8c708239dcc39a71fc454c44b8c95de7b74d014c2f4ba4e06a6a0c52",
+        "configuration": [
+          "--enable-gpl",
+          "--enable-version3",
+          "--disable-autodetect",
+          "--disable-doc",
+          "--disable-ffplay",
+          "--disable-x86asm",
+          "--enable-shared",
+          "--disable-static",
+          "--prefix=<verification-prefix>",
+          "--target-os=mingw32",
+          "--arch=x86_64",
+          "--cc=gcc"
+        ],
+        "scope": "Native core compilation and encode/decode roundtrip; not a rebuild of BtbN external libraries",
+        "full_upstream_configuration_rebuilt": false
+      },
+      "distributed_tools": {
+        "status": "passed",
+        "platform": "Windows",
+        "codecs": [
+          {
+            "encoder": "libx264",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libx265",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libvpx-vp9",
+            "decoder_roundtrip": "passed",
+            "audio": "libopus"
+          },
+          {
+            "encoder": "libsvtav1",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          }
+        ],
+        "hevc_10bit": "passed",
+        "lossless_remux": "passed",
+        "thumbnail": "passed",
+        "audio_playback": "passed",
+        "tool_sha256": {
+          "ffmpeg.exe": "10d8fd5f27f53f2ed9feaa2ab49da999a8c06c68f6b9e630072747e58424874e",
+          "ffprobe.exe": "f867dab343bdfa27031eac26b47541454832128d5b7c9e5fc4961288c7d22377",
+          "ffplay.exe": "07a69d034099b6a17bbe6c0c4184ae3af110eb2a77a25a0b2287cc25b96da6ed"
+        },
+        "scope": "Actual distributed executable codec/export tests; headless audio, not interactive desktop playback"
+      }
+    },
+    "macos": {
+      "source_build": {
+        "status": "built",
+        "source_sha256": "8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e",
+        "configuration": [
+          "--prefix=<verification-prefix>",
+          "--enable-shared",
+          "--enable-pthreads",
+          "--enable-version3",
+          "--cc=clang",
+          "--host-cflags=",
+          "--host-ldflags=",
+          "--enable-ffplay",
+          "--enable-gpl",
+          "--enable-libsvtav1",
+          "--enable-libopus",
+          "--enable-libx264",
+          "--enable-libmp3lame",
+          "--enable-libdav1d",
+          "--enable-libvmaf",
+          "--enable-libvpx",
+          "--enable-libx265",
+          "--enable-openssl",
+          "--enable-videotoolbox",
+          "--enable-audiotoolbox",
+          "--enable-neon",
+          "--extra-cflags=-I/opt/homebrew/include",
+          "--extra-ldflags=-L/opt/homebrew/lib"
+        ],
+        "compiler": "Apple clang version 17.0.0 (clang-1700.6.4.2)",
+        "dependency_scope": "Rebuilt FFmpeg; recorded Homebrew dependency binaries are used for linking",
+        "ffmpeg_sha256": "33017c1c250a34112a4855947287a2d53405619c785dbc284f8b694bb025d456"
+      },
+      "distributed_tools": {
+        "status": "passed",
+        "platform": "Darwin",
+        "codecs": [
+          {
+            "encoder": "libx264",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libx265",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libvpx-vp9",
+            "decoder_roundtrip": "passed",
+            "audio": "libopus"
+          },
+          {
+            "encoder": "libsvtav1",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          }
+        ],
+        "hevc_10bit": "passed",
+        "lossless_remux": "passed",
+        "thumbnail": "passed",
+        "audio_playback": "passed",
+        "tool_sha256": {
+          "ffmpeg": "62a8f9d45272c81b8e993e5046585ca99298aa9abfd1972f1d7e486dd57de728",
+          "ffprobe": "e675158102d258884f397cbb4a34027ccbc534b1b4564d9ca0e0fdf48ee2c260",
+          "ffplay": "6862ae77b390f04e9a09f197cca3e301f74f82ca25c2c4bba2c1f0a51148c6d3"
+        },
+        "scope": "Actual distributed executable codec/export tests; headless audio, not interactive desktop playback"
+      },
+      "rebuilt_tools": {
+        "status": "passed",
+        "platform": "Darwin",
+        "codecs": [
+          {
+            "encoder": "libx264",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libx265",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          },
+          {
+            "encoder": "libvpx-vp9",
+            "decoder_roundtrip": "passed",
+            "audio": "libopus"
+          },
+          {
+            "encoder": "libsvtav1",
+            "decoder_roundtrip": "passed",
+            "audio": "aac"
+          }
+        ],
+        "hevc_10bit": "passed",
+        "lossless_remux": "passed",
+        "thumbnail": "passed",
+        "audio_playback": "passed",
+        "tool_sha256": {
+          "ffmpeg": "33017c1c250a34112a4855947287a2d53405619c785dbc284f8b694bb025d456",
+          "ffprobe": "5e140320b2eb656035ce318bc26941ebc8135d4926d6f90727a6c97303089974",
+          "ffplay": "58bf68699dafe812f37273071d881005bc7ce3fa41c9073eb83245fb47e3f85f"
+        },
+        "scope": "Actual distributed executable codec/export tests; headless audio, not interactive desktop playback"
+      }
+    }
+  },
+  "linkage": {
+    "macos": {
+      "sha256": "6ecbdb4dfbb309702747d7d17059a4e28c7fc68d768c792209cc93ed732bdc82",
+      "libraries": [
+        "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+        "/usr/lib/libSystem.B.dylib",
+        "/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL",
+        "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+        "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+        "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+        "/usr/lib/libobjc.A.dylib",
+        "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+        "/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo",
+        "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+        "/usr/lib/libiconv.2.dylib",
+        "/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync",
+        "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices"
+      ],
+      "direct_ffmpeg_library_linkage": false
+    },
+    "windows": {
+      "sha256": "83bd9e97fac53396963441dd5720a48b14da36fd2d9de317c64c230cd66f9568",
+      "libraries": [
+        "kernel32.dll",
+        "ole32.dll",
+        "combase.dll",
+        "shell32.dll",
+        "user32.dll",
+        "shlwapi.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "bcryptprimitives.dll",
+        "OPENGL32.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "SHELL32.dll",
+        "GDI32.dll",
+        "ADVAPI32.dll",
+        "uiautomationcore.dll",
+        "oleaut32.dll",
+        "imm32.dll",
+        "dwmapi.dll",
+        "uxtheme.dll",
+        "ntdll.dll"
+      ],
+      "direct_ffmpeg_library_linkage": false
+    },
+    "linux": {
+      "sha256": "5388d904df9bc78aa13dcae13abd600e2087f2cfe016a50bdcbd7576a2b4997d",
+      "libraries": [
+        "libgcc_s.so.1",
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "direct_ffmpeg_library_linkage": false
+    }
+  },
+  "source_completeness_method": "Pinned source archives, original recipes/patches, complete submodules and locked Rust vendor sources",
+  "full_dependency_toolchain_reproduction_claimed": false,
+  "scope": "Technical/source-license preview release checks. Windows/Linux rebuild scope is the FFmpeg core; actual distributed external-codec configurations are runtime tested. All upstream dependency binaries have not been rebuilt byte-for-byte.",
+  "remaining_preview_limits": [
+    "macOS ad-hoc signature without notarization",
+    "Windows unsigned binaries",
+    "Interactive desktop and GPU behaviour are not certified by headless checks"
+  ]
+}

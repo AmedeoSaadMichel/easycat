@@ -25,11 +25,11 @@ The workspace's existing MIT metadata does not require publishing private source
 - Complete pinned upstream sources for 14 macOS dependencies, including Homebrew recipes, patches, receipts and SBOMs.
 - 127 Windows/Linux dependency source candidates, with Git tags resolved, submodules collected, SVN revisions preserved and original BtbN build scripts/patches.
 - Locked Cargo vendor sources for rav1e and librsvg, plus all 415 public registry crate archives used by easycat's workspace.
-- GPLv3, upstream component notices, Rust dependency notices, and font license texts. Four old crates (block, dispatch, malloc_buf and hexf-parse) provide a license declaration without a standalone text; their metadata, authors and the corresponding standard SPDX text are preserved and flagged for review.
+- GPLv3, upstream component notices, Rust dependency notices, and font license texts. The four previously flagged crates (block, dispatch, malloc_buf and hexf-parse) are resolved: their immutable published crate checksums, exact upstream manifest declarations and author attributions match. Complete notices are shipped under `resolved-crate-licenses`; no copyright year or new license grant is invented.
 - Updated packaging scripts include `Licenses/ThirdParty` on every platform. Existing release files are not overwritten; the preparation command creates separate legal-preview packages and checksums.
 - Regression checks prevent exporting workspace sources, following license symlinks to private files, accepting private registry content, or treating a source hash mismatch as verified.
 
-The 127 recipes are a conservative source superset, not a claim that every dependency is linked on every platform. The exact platform buildconf and upstream enabled/dependency logic remain the authoritative selection evidence. The source archives and build instructions still need native reconstruction/release review; collecting sources alone is not proof of full compliance.
+The 127 recipes are a conservative source superset, not a claim that every dependency is linked on every platform. The exact platform buildconf and upstream enabled/dependency logic remain the authoritative selection evidence. Source identity/completeness and native build/runtime verification are separate checks. The release report records their actual scope. Providing complete corresponding source, including build scripts, is the GPL requirement; byte-identical reproduction of all upstream dependency binaries is not claimed.
 
 ## Prepare a separate public repository payload
 
@@ -45,7 +45,7 @@ python3 scripts/prepare_public_distribution.py \
 
 The command refuses the private development repository, checks original package and collected source checksums, adds notices to separate installer copies, and creates the public Cask with the new DMG checksum. It keeps the original binaries and packages intact and ad-hoc signs only the copied macOS app after adding documents. The native engine/UI binaries are unchanged. macOS remains an unnotarized preview; a personal Homebrew tap does not change Gatekeeper behaviour.
 
-Review `PREPARATION-STATUS.json`, the payload README and the source manifests before publishing. Rebuild/validate the native third-party variants from preserved sources, inspect the four metadata-only Rust license declarations, check supported-machine operation, and confirm distribution terms/artwork rights. Do not mark this review complete merely because the scripts succeed.
+The preparation command requires the completed evidence in `distribution/compliance/release-verification.json`. Review `PREPARATION-STATUS.json`, the payload README and the source manifests before publishing. The four Rust declarations have complete matching evidence; native verification scope and preview limits remain explicit in the report. Distribution terms must preserve third-party rights. No legal certification, exhaustive interactive/GPU certification or byte-identical toolchain reproduction is implied.
 
 After review, create a **new** public distribution repository, copy README/Casks/notices and source result manifests only, and upload all installer/source archives plus SHA256SUMS to `v0.1.0-preview.2`. Do not push the easycut Git history, Cargo workspace, local credentials, staging app directory or working files. Publish source assets beside the binaries at the same release/download location, without authentication or fees, and retain them for as long as corresponding binaries are offered. GPLv3 section 6(d) permits an equivalent source download alongside object-code downloads; an upstream URL or incomplete source recipe list alone is not the prepared distribution method.
 
@@ -68,4 +68,17 @@ The first portable collection intentionally leaves tags/submodules blocked; the 
 
 ## Verification performed
 
-Five Python regression tests passed, along with cargo fmt, Clippy with warnings denied, and all 58 Rust unit/integration tests. The prepared Windows/Linux archives preserve the original application/tool executable bytes; the macOS copied app preserves those executable bytes and passes strict recursive signature verification. The new DMG passes hdiutil verification and its generated Cask passes Homebrew style checks. The public source indexes exclude workspace packages and the source archive paths exclude easycat workspace directories and Git history. Native third-party source reconstruction and legal release review have not been completed.
+Five Python regression tests passed, along with cargo fmt, Clippy with warnings denied, and all 58 Rust unit/integration tests. The prepared Windows/Linux archives preserve the original application/tool executable bytes; the macOS copied app preserves those executable bytes and passes strict recursive signature verification. The new DMG passes hdiutil verification and its generated Cask passes Homebrew style checks. The public source indexes exclude workspace packages and the source archive paths exclude easycat workspace directories and Git history. FFmpeg was rebuilt on macOS with the recorded external-codec flags, using the recorded Homebrew dependency binaries. Windows/Linux checks rebuild the pinned FFmpeg core with external auto-detection disabled, then independently test the actual distributed full-codec binaries. This verifies source buildability and native runtime capabilities; it does not claim that every BtbN dependency was rebuilt. Actual app imports on all three platforms contain no direct FFmpeg library linkage.
+
+## Resolution of the four Rust license cases
+
+Cargo defines `license` as the software license under which the package is released; an SPDX expression is valid independently of an optional `license-file`. See the [Cargo manifest reference](https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields).
+
+| Package | Upstream declaration | Resolution |
+| --- | --- | --- |
+| block 0.1.6 | MIT | Published archive checksum matches Cargo.lock; pinned original manifest and authors agree; full MIT permission text and original attribution supplied |
+| dispatch 0.2.0 | MIT | Same verification at the published VCS commit |
+| malloc_buf 0.0.6 | MIT | Same verification at the original release commit |
+| hexf-parse 0.2.1 | CC0-1.0 | Same verification against parse/Cargo.toml; complete CC0 text supplied |
+
+The package-specific notices and both manifests are stored in `distribution/resolved-crate-licenses`. The actual source archives remain available with the release. These are verified upstream declarations, not retroactive permissions invented by easycat. No dependency replacement or app code change was needed. Packaging rejects a changed manifest rather than silently reusing a previous resolution.

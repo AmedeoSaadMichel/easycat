@@ -11,6 +11,9 @@ import prepare_public_distribution as public_distribution
 
 from collect_distribution_sources import collect_crates, collect_mac
 from third_party_notices import prepare_notices
+from resolve_crate_license_cases import verify_declaration
+from audit_distribution_linkage import reject_ffmpeg_imports
+from assemble_release_verification import require_passed
 
 
 class DistributionTests(unittest.TestCase):
@@ -36,6 +39,24 @@ class DistributionTests(unittest.TestCase):
             for path in (root / 'notices').rglob('*'):
                 if path.is_file():
                     self.assertNotIn(b'PRIVATE_EASYCAT_SOURCE_SENTINEL', path.read_bytes())
+
+    def test_embedded_font_license_texts_are_preserved(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            crate = root / 'public'
+            (crate / 'fonts').mkdir(parents=True)
+            (crate / 'Cargo.toml').write_text('fixture')
+            for name in ['OFL.txt', 'UFL.txt', 'Hack-Regular.txt', 'emoji-icon-font-mit-license.txt']:
+                (crate / 'fonts' / name).write_text('Original font license ' + name)
+            (crate / 'fonts/Ubuntu-Light.ttf').write_bytes(b'FONT_BINARY')
+            records = prepare_notices(root / 'notices', {'packages': [{
+                'source': 'registry+https://github.com/rust-lang/crates.io-index',
+                'name': 'font-package', 'version': '1.0', 'license': 'MIT AND OFL-1.1',
+                'manifest_path': str(crate / 'Cargo.toml'),
+            }]})
+            self.assertEqual(len(records[0]['notice_files']), 4)
+            self.assertTrue((root / 'notices/rust-licenses/font-package-1.0/fonts/UFL.txt').is_file())
+            self.assertFalse((root / 'notices/rust-licenses/font-package-1.0/fonts/Ubuntu-Light.ttf').exists())
 
     def test_private_registry_is_rejected(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -77,6 +98,37 @@ class DistributionTests(unittest.TestCase):
                 public_distribution.bundle_sources(archive_path, [])
             with tarfile.open(archive_path) as archive:
                 self.assertEqual(archive.getnames(), ['compliance-and-notices/notice.txt'])
+
+    def test_upstream_license_declaration_must_match_exact_package(self):
+        manifest = '[package]\nname = "block"\nversion = "0.1.6"\nlicense = "MIT"\nauthors = ["Steven Sheldon"]\n'
+        self.assertEqual(verify_declaration(manifest, 'block', '0.1.6', 'MIT'), ['Steven Sheldon'])
+        with self.assertRaisesRegex(ValueError, 'license'):
+            verify_declaration(manifest.replace('"MIT"', '"GPL-3.0-only"'), 'block', '0.1.6', 'MIT')
+        with self.assertRaisesRegex(ValueError, 'version'):
+            verify_declaration(manifest, 'block', '0.2.0', 'MIT')
+
+    def test_modified_manifest_cannot_reuse_a_resolved_license(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / 'Cargo.toml'
+            manifest.write_text('[package]\nname = "block"\nlicense = "MIT"\n# modified\n')
+            with self.assertRaisesRegex(RuntimeError, 'evidence does not match'):
+                prepare_notices(root / 'notices', {'packages': [{
+                    'source': 'registry+https://github.com/rust-lang/crates.io-index',
+                    'name': 'block', 'version': '0.1.6', 'license': 'MIT', 'manifest_path': str(manifest),
+                }]})
+
+    def test_direct_ffmpeg_linkage_blocks_private_app_release(self):
+        reject_ffmpeg_imports(['KERNEL32.dll', 'libc.so.6', '/usr/lib/libSystem.B.dylib'])
+        for name in ['avcodec-63.dll', 'libavformat.so.63', '/app/lib/libavutil.61.dylib']:
+            with self.assertRaisesRegex(RuntimeError, 'directly links'):
+                reject_ffmpeg_imports([name])
+
+    def test_native_readiness_rejects_incomplete_checks(self):
+        require_passed({'status': 'passed'})
+        for report in [{'status': 'running'}, {'status': 'failed'}, {}]:
+            with self.assertRaisesRegex(ValueError, 'has not passed'):
+                require_passed(report)
 
     def test_wrong_source_checksum_stays_blocked(self):
         with tempfile.TemporaryDirectory() as temporary:

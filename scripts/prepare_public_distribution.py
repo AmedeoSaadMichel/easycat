@@ -56,6 +56,9 @@ def main():
         parser.error('Use a separate public distribution repository; keep easycut private')
     if digest(ROOT / 'Cargo.lock') != 'd6d8c3585a1c883c260871d0627316ae607822a68c7dcf2457fe3307fcb69d87':
         parser.error('The original preview dependency lock changed; re-audit the actual binary dependencies')
+    verification = json.loads((ROOT / 'distribution/compliance/release-verification.json').read_text())
+    if verification.get('status') != 'passed' or not verification.get('ready_for_public_preview'):
+        parser.error('Completed native/source-license verification is required')
     mac = json.loads((SOURCES / 'macos-source-results.json').read_text())
     portable = json.loads((SOURCES / 'portable-source-results.json').read_text())
     rust = json.loads((SOURCES / 'ffmpeg-rust-vendor-results.json').read_text())
@@ -132,6 +135,7 @@ def main():
     subprocess.run(['hdiutil', 'verify', str(mac_dmg)], check=True)
     assets = [file for file in output.iterdir() if file.name.endswith(('.tar.gz', '.zip', '.dmg'))]
     checksums = {file.name: digest(file) for file in assets}
+    shutil.copy2(ROOT / 'distribution/compliance/release-verification.json', output / 'RELEASE-VERIFICATION.json')
     (output / 'SHA256SUMS').write_text(''.join(f'{checksum}  {name}\n' for name, checksum in sorted(checksums.items())))
     cask = output / 'Casks/easycat.rb'
     cask.parent.mkdir(exist_ok=args.resume)
@@ -140,10 +144,12 @@ def main():
     text = text.replace('AmedeoSaadMichel/easycut', args.repository).replace('-macos-arm64.dmg', '-macos-arm64-legal-preview.dmg')
     cask.write_text(text)
     (output / 'PREPARATION-STATUS.json').write_text(json.dumps({
-        'repository': args.repository, 'published': False, 'owner_release_review_required': True,
+        'repository': args.repository, 'published': False, 'owner_release_review_required': False, 'technical_checks_passed': True,
         'source_trees_collected': {'macos': len(mac), 'portable_candidates': len(portable)},
         'original_application_binaries_changed': False, 'macos_signature': 'ad-hoc, not notarized',
         'source_repo_must_remain_private': True, 'asset_sha256': checksums,
+        'license_cases_resolved': verification['license_cases_resolved'],
+        'verification_scope': verification['scope'],
     }, indent=2) + '\n')
     base = f'https://github.com/{args.repository}'
     release = base + '/releases/download/v0.1.0-preview.2/'
@@ -178,7 +184,7 @@ These packages contain FFmpeg under GPLv3-or-later, including GPL codec componen
 
 Licenses and notices are included in each installer under Licenses/ThirdParty (inside easycat.app/Contents/Resources on macOS). Preserve the source archives beside each released binary indefinitely. Publishing these materials does not publish easycat's application source.
 
-This directory is prepared for review; the repository and release must exist before these links work.
+Native codec tests and the recorded source/license checks passed; see RELEASE-VERIFICATION.json for their exact scope and preview limits. The repository and release must exist before these links work.
 ''')
     print('Prepared review directory:', output)
     print('No repository was created or published. Read docs/private-code-distribution.md before uploading.')

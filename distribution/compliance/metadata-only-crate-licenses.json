@@ -8,7 +8,10 @@
     "repository": "http://github.com/SSheldon/rust-block",
     "upstream_revision_inspected": "0.1.6",
     "evidence": "Published crates.io Cargo.toml license declaration; no standalone license file in package or inspected upstream tree",
-    "standard_text": "standard-licenses/MIT.txt"
+    "standard_text": "standard-licenses/MIT.txt",
+    "status": "resolved",
+    "resolution": "Matching published and pinned upstream SPDX declarations; complete package notice and source archive retained",
+    "notice": "resolved-crate-licenses/block-0.1.6/NOTICE.txt"
   },
   {
     "crate": "dispatch-0.2.0",
@@ -19,7 +22,10 @@
     "repository": "http://github.com/SSheldon/rust-dispatch",
     "upstream_revision_inspected": "82d6c7a5b75dc0c71c3f46f87bb6c16a476f7748",
     "evidence": "Published crates.io Cargo.toml license declaration; no standalone license file in package or inspected upstream tree",
-    "standard_text": "standard-licenses/MIT.txt"
+    "standard_text": "standard-licenses/MIT.txt",
+    "status": "resolved",
+    "resolution": "Matching published and pinned upstream SPDX declarations; complete package notice and source archive retained",
+    "notice": "resolved-crate-licenses/dispatch-0.2.0/NOTICE.txt"
   },
   {
     "crate": "hexf-parse-0.2.1",
@@ -30,7 +36,10 @@
     "repository": "https://github.com/lifthrasiir/hexf",
     "upstream_revision_inspected": "4225763d744183d720f575ae96d04161b4d08ea0",
     "evidence": "Published crates.io Cargo.toml license declaration; no standalone license file in package or inspected upstream tree",
-    "standard_text": "standard-licenses/CC0-1.0.txt"
+    "standard_text": "standard-licenses/CC0-1.0.txt",
+    "status": "resolved",
+    "resolution": "Matching published and pinned upstream SPDX declarations; complete package notice and source archive retained",
+    "notice": "resolved-crate-licenses/hexf-parse-0.2.1/NOTICE.txt"
   },
   {
     "crate": "malloc_buf-0.0.6",
@@ -41,6 +50,9 @@
     "repository": "https://github.com/SSheldon/malloc_buf",
     "upstream_revision_inspected": "0.0.6",
     "evidence": "Published crates.io Cargo.toml license declaration; no standalone license file in package or inspected upstream tree",
-    "standard_text": "standard-licenses/MIT.txt"
+    "standard_text": "standard-licenses/MIT.txt",
+    "status": "resolved",
+    "resolution": "Matching published and pinned upstream SPDX declarations; complete package notice and source archive retained",
+    "notice": "resolved-crate-licenses/malloc_buf-0.0.6/NOTICE.txt"
   }
 ]

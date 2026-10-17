@@ -8,6 +8,8 @@ import re
 import tarfile
 import urllib.request
 
+from third_party_notices import is_notice_path
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'distribution/crate-upstream-notices'
 
@@ -24,9 +26,7 @@ def collect(item):
                 relative = Path(*Path(member.name).parts[1:])
                 if not member.isfile() or relative.is_absolute() or '..' in relative.parts:
                     continue
-                if relative.suffix.lower() in ('.rs', '.c', '.cpp', '.h', '.py', '.js'):
-                    continue
-                if not relative.name.upper().startswith(('LICENSE', 'LICENCE', 'COPYING', 'COPYRIGHT', 'NOTICE', 'AUTHORS')):
+                if not is_notice_path(relative):
                     continue
                 target = OUT / (repository.replace('/', '_') + '-' + revision) / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -68,9 +68,15 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     with ThreadPoolExecutor(max_workers=5) as workers:
         results = list(workers.map(collect, [(repo, rev, crates) for (repo, rev), crates in groups.items()]))
+    resolution_file = ROOT / 'distribution/resolved-crate-licenses/resolutions.json'
+    resolutions = {item['crate']: item for item in json.loads(resolution_file.read_text())}
+    for result in results:
+        if result['status'] == 'blocked' and not result.get('error') and all(name in resolutions for name in result['crates']):
+            result['status'] = 'resolved-declaration'
+            result['license_notices'] = [resolutions[name]['notice'] for name in result['crates']]
     (OUT / 'index.json').write_text(json.dumps({'upstreams': results, 'unresolved': unresolved}, indent=2) + '\n')
     print(f'Collected {sum(p["status"] == "collected" for p in results)} upstream notice sets; unresolved crates: {unresolved}')
-    return 1 if unresolved or any(p['status'] == 'blocked' for p in results) else 0
+    return 1 if unresolved or any(p['status'] not in ('collected', 'resolved-declaration') for p in results) else 0
 
 
 if __name__ == '__main__':
