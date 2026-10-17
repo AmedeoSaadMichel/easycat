@@ -6,11 +6,11 @@ Requirements: an Apple Silicon Mac, macOS 15 Sequoia or later, and Homebrew. Thi
 
 ## Install
 
-Once this repository is public:
+Once this repository is public, add the personal tap once and install easycat:
 
 ```sh
 brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycut.git
-brew install --cask amedeosaadmichel/easycat/easycat
+brew install --cask easycat
 ```
 
 The explicit repository URL is required because the repository is named `easycut`, rather than Homebrew's conventional `homebrew-easycat`. This is a project-maintained tap, not a listing in the official Homebrew cask repository.

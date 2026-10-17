@@ -29,11 +29,11 @@ The package includes FFmpeg, ffprobe, ffplay and their required libraries. Homeb
 
 ### Install with Homebrew
 
-On Apple Silicon with macOS 15 or later, once this repository is public:
+On Apple Silicon with macOS 15 or later, once this repository is public. Add the personal tap once, then install easycat:
 
 ```sh
 brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycut.git
-brew install --cask amedeosaadmichel/easycat/easycat
+brew install --cask easycat
 ```
 
 [Homebrew requirements, updates and removal](docs/homebrew.md). This installs the same macOS preview and retains the signature limitations above.
