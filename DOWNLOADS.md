@@ -15,7 +15,7 @@
 
 [Release details and files](https://github.com/AmedeoSaadMichel/easycut/releases/tag/v0.1.0-preview.1) · [SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycut/releases/download/v0.1.0-preview.1/easycat-0.1.0-macos-arm64.dmg.sha256) · [Report a problem](https://github.com/AmedeoSaadMichel/easycut/issues)
 
-Packages are compiled and tested on native CI runners. Windows desktop interaction still needs hands-on validation; Linux startup/rendering is checked under Xvfb. Intel Mac packages will receive download links when ready. While this repository is private, downloads require repository access; making the repository public will make these releases accessible as well.
+Packages are compiled and tested on native CI runners. Windows desktop interaction still needs hands-on validation; Linux startup/rendering is checked under Xvfb. Intel Mac packages will receive download links when ready. While this repository is private, downloads require repository access; public distribution will use a separate downloads repository so the application source can remain private. See the [distribution preparation](docs/private-code-distribution.md).
 
 ## Install on macOS
 
@@ -29,7 +29,7 @@ The package includes FFmpeg, ffprobe, ffplay and their required libraries. Homeb
 
 ### Install with Homebrew
 
-On Apple Silicon with macOS 15 or later, once this repository is public. Add the personal tap once, then install easycat:
+On Apple Silicon with macOS 15 or later, once the public distribution repository is available. The current development-repository tap requires access. Add the personal tap once, then install easycat:
 
 ```sh
 brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycut.git

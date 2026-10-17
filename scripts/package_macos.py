@@ -9,6 +9,8 @@ import re
 import shutil
 import subprocess
 
+from third_party_notices import prepare_notices
+
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = '0.1.0'
 OUT = ROOT / 'dist'
@@ -90,6 +92,7 @@ def main():
         manifest.append({'source': str(source), 'bundled': str(dest.relative_to(APP)), 'sha256_original': hashlib.sha256(source.read_bytes()).hexdigest()})
     licenses = RESOURCES / 'Licenses'
     licenses.mkdir()
+    prepare_notices(licenses / 'ThirdParty')
     for package in sorted(packages):
         destination = licenses / (package.parent.name + '-' + package.name)
         destination.mkdir()

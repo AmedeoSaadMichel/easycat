@@ -1,0 +1,14 @@
+[
+  {
+    "recipe": "50-rav1e.sh",
+    "filename": "50-rav1e-cargo-vendor.tar.gz",
+    "sha256": "84173d56e9d42f1ae50e4a564156991455b3ce341f3df334ac1dfc8a13235a02",
+    "status": "collected"
+  },
+  {
+    "recipe": "50-librsvg/99-librsvg.sh",
+    "filename": "50-librsvg_99-librsvg-cargo-vendor.tar.gz",
+    "sha256": "f487dc4d7822ac141cdf813112c899595454fa14d12ffeb96b651eab961410f6",
+    "status": "collected"
+  }
+]

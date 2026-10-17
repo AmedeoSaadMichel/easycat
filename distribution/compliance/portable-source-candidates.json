@@ -1,0 +1,644 @@
+{
+  "build_recipe_commit": "63ac3265b0789ea16c7b1f8351cd2ad195a28722",
+  "ffmpeg_commit_prefix": "669f5ab083",
+  "candidates": [
+    {
+      "recipe": "10-mingw-std-threads.sh",
+      "repository": "https://github.com/meganz/mingw-std-threads.git",
+      "revision": "c931bac289dd431f1dd30fc4a5d1a7be36668073"
+    },
+    {
+      "recipe": "10-mingw.sh",
+      "repository": "https://git.code.sf.net/p/mingw-w64/mingw-w64.git",
+      "revision": "57b595039040eaa15bece85b7cc71d952281b269"
+    },
+    {
+      "recipe": "10-xorg-macros.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/util/macros.git",
+      "revision": "ea1e15a4909ac8b03b2c5a08ac3810b385985157"
+    },
+    {
+      "recipe": "20-libiconv.sh",
+      "repository": "https://git.savannah.gnu.org/git/libiconv.git",
+      "revision": "1df3087ba8110c7f3ed3eb5f8869b814dbbe00b0"
+    },
+    {
+      "recipe": "20-zlib.sh",
+      "repository": "https://github.com/madler/zlib.git",
+      "revision": "767c4c947852e143f582c85f14cf573411df1b35"
+    },
+    {
+      "recipe": "25-fftw3.sh",
+      "repository": "https://github.com/FFTW/fftw3.git",
+      "revision": "93ed4c786934aec9946f8dda4b4e3eb08f8be41c"
+    },
+    {
+      "recipe": "25-fribidi.sh",
+      "repository": "https://github.com/fribidi/fribidi.git",
+      "revision": "4c914a92e94a9fe4f30ae83a1130099841566448"
+    },
+    {
+      "recipe": "25-gmp.sh",
+      "repository": "https://github.com/BtbN/gmplib.git",
+      "revision": "763b40df71c0f4d5f5d7b33dc55038c8c9377ecf"
+    },
+    {
+      "recipe": "25-libogg.sh",
+      "repository": "https://github.com/xiph/ogg.git",
+      "revision": "06a5e0262cdc28aa4ae6797627a783b5010440f0"
+    },
+    {
+      "recipe": "25-libpng.sh",
+      "repository": "https://github.com/glennrp/libpng.git",
+      "revision": "964b4135949703b705fc760fc3fb546b86e5ab47"
+    },
+    {
+      "recipe": "25-libxml2.sh",
+      "repository": "https://github.com/GNOME/libxml2.git",
+      "revision": "91586dc6742ab335682235120363f6e126eea5e2"
+    },
+    {
+      "recipe": "25-openssl.sh",
+      "repository": "https://github.com/openssl/openssl.git",
+      "revision": "openssl-3.6.4"
+    },
+    {
+      "recipe": "25-xz.sh",
+      "repository": "https://github.com/tukaani-project/xz.git",
+      "revision": "3b1efb04d17c3a9ef7f473d73af13f1531428ffe"
+    },
+    {
+      "recipe": "45-brotli.sh",
+      "repository": "https://github.com/google/brotli.git",
+      "revision": "a3abcbee0d945e51dddeec81e647ffe0cde182c2"
+    },
+    {
+      "recipe": "45-fonts/25-freetype.sh",
+      "repository": "https://gitlab.freedesktop.org/freetype/freetype.git",
+      "revision": "d333439633039de426f943f28a2926c7f97b5ae5"
+    },
+    {
+      "recipe": "45-fonts/35-fontconfig.sh",
+      "repository": "https://gitlab.freedesktop.org/fontconfig/fontconfig.git",
+      "revision": "bd8f7b597de96761750d0365abb49b19d2f8d5c3"
+    },
+    {
+      "recipe": "45-fonts/45-harfbuzz.sh",
+      "repository": "https://github.com/harfbuzz/harfbuzz.git",
+      "revision": "b3bab62307017934dd7f532c52a696fefb12b3ad"
+    },
+    {
+      "recipe": "45-fonts/50-freetype.sh",
+      "repository": "https://gitlab.freedesktop.org/freetype/freetype.git",
+      "revision": "d333439633039de426f943f28a2926c7f97b5ae5"
+    },
+    {
+      "recipe": "45-lcms2.sh",
+      "repository": "https://github.com/mm2/Little-CMS.git",
+      "revision": "35cef8775e0ab46f0dda0b46aae1e69d27524432"
+    },
+    {
+      "recipe": "45-libffi.sh",
+      "repository": "https://github.com/libffi/libffi.git",
+      "revision": "bc553867367246d140cd156f060bd0409f57f157"
+    },
+    {
+      "recipe": "45-libsamplerate.sh",
+      "repository": "https://github.com/libsndfile/libsamplerate.git",
+      "revision": "0844c208f683527c08ea8a80acc13b398aa9c8bf"
+    },
+    {
+      "recipe": "45-libudfread.sh",
+      "repository": "https://code.videolan.org/videolan/libudfread.git",
+      "revision": "b0bc6957e7e07d5f35391f210596d9eb71cffdd9"
+    },
+    {
+      "recipe": "45-libunibreak.sh",
+      "repository": "https://github.com/adah1972/libunibreak.git",
+      "revision": "28a2756b864c343f438cd22537d49d394d4666a5"
+    },
+    {
+      "recipe": "45-libvorbis.sh",
+      "repository": "https://github.com/xiph/vorbis.git",
+      "revision": "1b75110b5a2754ba1931d82dd83cb822b266a21d"
+    },
+    {
+      "recipe": "45-opencl.sh",
+      "repository": "https://github.com/KhronosGroup/OpenCL-Headers.git",
+      "revision": "e6060189f4ebe8b52d885c37af71b9a50c272154"
+    },
+    {
+      "recipe": "45-pcre2.sh",
+      "repository": "https://github.com/PCRE2Project/pcre2.git",
+      "revision": "09eb19dc1102b34e7557408f33318364cb97d2b0"
+    },
+    {
+      "recipe": "45-pixman.sh",
+      "repository": "https://gitlab.freedesktop.org/pixman/pixman.git",
+      "revision": "96c04d1b87934dc4b9396197a2dff737698ab310"
+    },
+    {
+      "recipe": "45-pulseaudio.sh",
+      "repository": "https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git",
+      "revision": "77d25a1e613095bdf87a1d13b65e7c330565077a"
+    },
+    {
+      "recipe": "45-vmaf.sh",
+      "repository": "https://github.com/Netflix/vmaf.git",
+      "revision": "86da14d0306a138fd3f01319860b905169746516"
+    },
+    {
+      "recipe": "45-x11/10-xcbproto.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/proto/xcbproto.git",
+      "revision": "cf7e2581b613802f2f8ec2a4b50a6a20aad4bf52"
+    },
+    {
+      "recipe": "45-x11/10-xproto.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/proto/xorgproto.git",
+      "revision": "fd86fbff46eb7ab8e193c12b8a529e90bae31835"
+    },
+    {
+      "recipe": "45-x11/10-xtrans.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxtrans.git",
+      "revision": "79f6b0bfe2170496e8c37626043d009f4cd3f1e1"
+    },
+    {
+      "recipe": "45-x11/20-libxau.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxau.git",
+      "revision": "be1daeb909f1d678e7859ac1555e90b4e768d5c4"
+    },
+    {
+      "recipe": "45-x11/30-libxcb.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxcb.git",
+      "revision": "d4e07bab5729c7d7cc3d2b95568cd9a661a53c4f"
+    },
+    {
+      "recipe": "45-x11/40-libx11.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libx11.git",
+      "revision": "13f9b8de400335f4b86bb0672da02f8166c0e796"
+    },
+    {
+      "recipe": "45-x11/50-libxext.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxext.git",
+      "revision": "508f8adca2540ff8926ac8456cb1c553a8caae76"
+    },
+    {
+      "recipe": "45-x11/50-libxfixes.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxfixes.git",
+      "revision": "55bb2d1d57d43e0595ce45393f26eb433d75a7cc"
+    },
+    {
+      "recipe": "45-x11/50-libxi.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxi.git",
+      "revision": "3a0adabd16d8bf19c772061ad67f25c51281edf3"
+    },
+    {
+      "recipe": "45-x11/50-libxinerama.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxinerama.git",
+      "revision": "d7162b962710bc724b41cabab4e7cea303c4b541"
+    },
+    {
+      "recipe": "45-x11/50-libxrender.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxrender.git",
+      "revision": "f32afe9f877ae032c6bc9c27b17b7978b1b4c856"
+    },
+    {
+      "recipe": "45-x11/50-libxscrnsaver.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver.git",
+      "revision": "3f753e7a4050db083474444ae91cc17a849eaa4d"
+    },
+    {
+      "recipe": "45-x11/50-libxxf86vm.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxxf86vm.git",
+      "revision": "c76fde6bffcc87e5dd98d8196bb01a299bdc3236"
+    },
+    {
+      "recipe": "45-x11/60-libglvnd.sh",
+      "repository": "https://gitlab.freedesktop.org/glvnd/libglvnd.git",
+      "revision": "c046a760d845416e98ac4128757b2b356c47fdaa"
+    },
+    {
+      "recipe": "45-x11/60-libxcursor.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxcursor.git",
+      "revision": "15efad7ccd035f5d1ddc8d437e047569d1775fa7"
+    },
+    {
+      "recipe": "45-x11/60-libxrandr.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxrandr.git",
+      "revision": "8a4ba1974bcf07057cf891128d86ae1ab5303574"
+    },
+    {
+      "recipe": "45-x11/60-libxv.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxv.git",
+      "revision": "f315ec50fcad9bdbaed46c3e78dc5e7fe209f933"
+    },
+    {
+      "recipe": "45-xxhash.sh",
+      "repository": "https://github.com/Cyan4973/xxHash.git",
+      "revision": "680bf463fa1ca0461b9a7c2dab7556e1f54cf4cf"
+    },
+    {
+      "recipe": "45-zstd.sh",
+      "repository": "https://github.com/facebook/zstd.git",
+      "revision": "01b7154f1172432f8abe9b3bb9909e14a1176b7d"
+    },
+    {
+      "recipe": "47-vulkan/40-vulkan-headers.sh",
+      "repository": "https://github.com/KhronosGroup/Vulkan-Headers.git",
+      "revision": "v1.4.363"
+    },
+    {
+      "recipe": "47-vulkan/45-vulkan-loader.sh",
+      "repository": "https://github.com/BtbN/Vulkan-Shim-Loader.git",
+      "revision": "65b3936528cd92eb4ea3de485d03f858a3850484"
+    },
+    {
+      "recipe": "47-vulkan/50-shaderc.sh",
+      "repository": "https://github.com/google/shaderc.git",
+      "revision": "a8abeb0b8a9d4b11e3d59ca9f4550b8213e733ab"
+    },
+    {
+      "recipe": "47-vulkan/55-spirv-cross.sh",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Cross.git",
+      "revision": "aa217aeb6c9f0ace7a0ab233b28807edf45eb165"
+    },
+    {
+      "recipe": "47-vulkan/60-spirv-headers.sh",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Headers.git",
+      "revision": "2b7475f6d664efbad4d4315c94ecec9640831e5b"
+    },
+    {
+      "recipe": "50-amf.sh",
+      "repository": "https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git",
+      "revision": "6277e353fd625121a8f627b1d0540323ef372a49"
+    },
+    {
+      "recipe": "50-aom.sh",
+      "repository": "https://aomedia.googlesource.com/aom",
+      "revision": "b4ce2cd097b00921b0327bfb5f07b5f8361ade99"
+    },
+    {
+      "recipe": "50-avisynth.sh",
+      "repository": "https://github.com/AviSynth/AviSynthPlus.git",
+      "revision": "5c82777b374bdef16e13007a11e77d735ac1e4eb"
+    },
+    {
+      "recipe": "50-chromaprint.sh",
+      "repository": "https://github.com/acoustid/chromaprint.git",
+      "revision": "aed8eba2202dd9d7b3b0a56c77904cc805490d72"
+    },
+    {
+      "recipe": "50-dav1d.sh",
+      "repository": "https://code.videolan.org/videolan/dav1d.git",
+      "revision": "9711965b60bb692ae24004659acf61f5c7d9ed61"
+    },
+    {
+      "recipe": "50-davs2.sh",
+      "repository": "https://github.com/pkuvcl/davs2.git",
+      "revision": "b41cf117452e2d73d827f02d3e30aa20f1c721ac"
+    },
+    {
+      "recipe": "50-dvd/30-libdvdcss.sh",
+      "repository": "https://code.videolan.org/videolan/libdvdcss.git",
+      "revision": "811ce97a1d4d1c9d936f4b2707f533a9ef768251"
+    },
+    {
+      "recipe": "50-dvd/40-libdvdread.sh",
+      "repository": "https://code.videolan.org/videolan/libdvdread.git",
+      "revision": "0f30df53125b564ef45903714403ce0a1e6c5e9e"
+    },
+    {
+      "recipe": "50-dvd/50-libdvdnav.sh",
+      "repository": "https://code.videolan.org/videolan/libdvdnav.git",
+      "revision": "8147ccd35e5aae4afdd21171cf7b6b4d8f179d28"
+    },
+    {
+      "recipe": "50-fdk-aac.sh",
+      "repository": "https://github.com/mstorsjo/fdk-aac.git",
+      "revision": "7c83d08002332b2730c845eec3497e6bf585dd28"
+    },
+    {
+      "recipe": "50-ffnvcodec.sh",
+      "repository": "https://github.com/FFmpeg/nv-codec-headers.git",
+      "revision": "eddcea9e27f6b772057c9b3f87de2cc1737faffc"
+    },
+    {
+      "recipe": "50-frei0r.sh",
+      "repository": "https://github.com/dyne/frei0r.git",
+      "revision": "4c95b2a02b2d03c71d5f6d7980d16c99acfd5a5f"
+    },
+    {
+      "recipe": "50-gme.sh",
+      "repository": "https://github.com/libgme/game-music-emu.git",
+      "revision": "f68963b1de0633149b05732113d3c3113c6f63a1"
+    },
+    {
+      "recipe": "50-kvazaar.sh",
+      "repository": "https://github.com/ultravideo/kvazaar.git",
+      "revision": "2b06691bb5844404c0e703f12a5d7b0fee914ec7"
+    },
+    {
+      "recipe": "50-lcevcdec.sh",
+      "repository": "https://github.com/v-novaltd/LCEVCdec.git",
+      "revision": "17804ac54db8fbb42717f3275b1e73f3c0b067d3"
+    },
+    {
+      "recipe": "50-libaribb24.sh",
+      "repository": "https://github.com/nkoriyama/aribb24.git",
+      "revision": "5e9be272f96e00f15a2f3c5f8ba7e124862aec38"
+    },
+    {
+      "recipe": "50-libaribcaption.sh",
+      "repository": "https://github.com/xqq/libaribcaption.git",
+      "revision": "c64c23b8905ba514b87c9789269e9f66f949ffe0"
+    },
+    {
+      "recipe": "50-libass.sh",
+      "repository": "https://github.com/libass/libass.git",
+      "revision": "f61db567e6593df3470e91594bcd4ad2d0473aff"
+    },
+    {
+      "recipe": "50-libbluray.sh",
+      "repository": "https://code.videolan.org/videolan/libbluray.git",
+      "revision": "a24f4fad4d62893de647abc8671397747b2359dd"
+    },
+    {
+      "recipe": "50-libcurl/40-libpsl.sh",
+      "repository": "https://github.com/rockdaboot/libpsl.git",
+      "revision": "a629c831d09011f76974d931be7f6167be90673e"
+    },
+    {
+      "recipe": "50-libcurl/40-nghttp2.sh",
+      "repository": "https://github.com/nghttp2/nghttp2.git",
+      "revision": "19d06e62185d93d2398d85241cdbb460349bfe44"
+    },
+    {
+      "recipe": "50-libcurl/40-nghttp3.sh",
+      "repository": "https://github.com/ngtcp2/nghttp3.git",
+      "revision": "2304973e5a0c8b1fa4bb380b47945a000357f87f"
+    },
+    {
+      "recipe": "50-libcurl/40-ngtcp2.sh",
+      "repository": "https://github.com/ngtcp2/ngtcp2.git",
+      "revision": "a4925d70647b75286b28c37be260de3729c2de3d"
+    },
+    {
+      "recipe": "50-libcurl/50-libcurl.sh",
+      "repository": "https://github.com/curl/curl.git",
+      "revision": "4c67658f953751de9e66bb5f9729af821a641341"
+    },
+    {
+      "recipe": "50-libjxl/50-libjxl.sh",
+      "repository": "https://github.com/libjxl/libjxl.git",
+      "revision": "b87738951c1254cd8cccaa6d47712ba735da56d8"
+    },
+    {
+      "recipe": "50-libmp3lame.sh",
+      "repository": "https://svn.code.sf.net/p/lame/svn/trunk/lame",
+      "revision": "6835",
+      "vcs": "svn"
+    },
+    {
+      "recipe": "50-libopus.sh",
+      "repository": "https://github.com/xiph/opus.git",
+      "revision": "503d81b138d76621aae4b12786e90de48aa8db3a"
+    },
+    {
+      "recipe": "50-libplacebo.sh",
+      "repository": "https://code.videolan.org/videolan/libplacebo.git",
+      "revision": "1937beef3a2f508266c68efea1491e3fc4600e04"
+    },
+    {
+      "recipe": "50-librist/40-mbedtls.sh",
+      "repository": "https://github.com/ARMmbed/mbedtls.git",
+      "revision": "v4.2.0"
+    },
+    {
+      "recipe": "50-librist/50-librist.sh",
+      "repository": "https://code.videolan.org/rist/librist.git",
+      "revision": "4f45ef8f78983892d52ccd52d9f675435b23738f"
+    },
+    {
+      "recipe": "50-librsvg/10-glib.sh",
+      "repository": "https://github.com/GNOME/glib.git",
+      "revision": "5a124d1e66a6c2dc56989303b4d6d4781c2952ed"
+    },
+    {
+      "recipe": "50-librsvg/20-cairo.sh",
+      "repository": "https://gitlab.freedesktop.org/cairo/cairo.git",
+      "revision": "74755964edef651691d5cd36ff140108298e4e6e"
+    },
+    {
+      "recipe": "50-librsvg/30-pango.sh",
+      "repository": "https://github.com/GNOME/pango.git",
+      "revision": "8e74c27c113c98664b77272d16b14bbce542c184"
+    },
+    {
+      "recipe": "50-librsvg/99-librsvg.sh",
+      "repository": "https://github.com/GNOME/librsvg.git",
+      "revision": "7612431eb02dc009319094f8513d63c1faaecfb4"
+    },
+    {
+      "recipe": "50-libssh.sh",
+      "repository": "https://gitlab.com/libssh/libssh-mirror.git",
+      "revision": "76e0a8639e61436c28d877586f65a7707edc6ee5"
+    },
+    {
+      "recipe": "50-libtheora.sh",
+      "repository": "https://github.com/xiph/theora.git",
+      "revision": "28fd5ec77f0ad0e07a371cef1047828116f6bd8a"
+    },
+    {
+      "recipe": "50-libvpx.sh",
+      "repository": "https://chromium.googlesource.com/webm/libvpx",
+      "revision": "5e680f30801d03c21078f8c4b772464752516211"
+    },
+    {
+      "recipe": "50-libwebp.sh",
+      "repository": "https://chromium.googlesource.com/webm/libwebp",
+      "revision": "5c168cd23b1872969c38e34b01b04dcf29849288"
+    },
+    {
+      "recipe": "50-libzmq.sh",
+      "repository": "https://github.com/zeromq/libzmq.git",
+      "revision": "46493370217ac135246617fa2f6ac819d8b61bfc"
+    },
+    {
+      "recipe": "50-lilv/96-lv2.sh",
+      "repository": "https://github.com/lv2/lv2.git",
+      "revision": "3c57dae600a5ad8d05acd53ee3490f7d91cb7be6"
+    },
+    {
+      "recipe": "50-lilv/96-serd.sh",
+      "repository": "https://github.com/drobilla/serd.git",
+      "revision": "b6053bb2a4533e6a8e3821c1061f140d5e666938"
+    },
+    {
+      "recipe": "50-lilv/96-zix.sh",
+      "repository": "https://github.com/drobilla/zix.git",
+      "revision": "17d632393f5addb6fa24dda2927b96515407cca7"
+    },
+    {
+      "recipe": "50-lilv/97-sord.sh",
+      "repository": "https://github.com/drobilla/sord.git",
+      "revision": "4b5232bb91e7f2f1b84df384494d073fabbcd312"
+    },
+    {
+      "recipe": "50-lilv/98-sratom.sh",
+      "repository": "https://github.com/lv2/sratom.git",
+      "revision": "9e8ee84eed502e6030ce8bb49694fd28542b08fc"
+    },
+    {
+      "recipe": "50-lilv/99-lilv.sh",
+      "repository": "https://github.com/lv2/lilv.git",
+      "revision": "4b8f30055fa5cb4134a2eb45fc1555bc04289314"
+    },
+    {
+      "recipe": "50-onevpl.sh",
+      "repository": "https://github.com/intel/libvpl.git",
+      "revision": "674d015bcb294bc39fa276e99a652ea045423e82"
+    },
+    {
+      "recipe": "50-openal.sh",
+      "repository": "https://github.com/kcat/openal-soft.git",
+      "revision": "c89b8cf7bba4822f230c69f0a6696a52e5322dca"
+    },
+    {
+      "recipe": "50-openapv.sh",
+      "repository": "https://github.com/AcademySoftwareFoundation/openapv.git",
+      "revision": "a58ce739be0dfb083643d929aee8f0e0ba9bdf63"
+    },
+    {
+      "recipe": "50-opencore-amr.sh",
+      "repository": "https://git.code.sf.net/p/opencore-amr/code",
+      "revision": "7dba8c32238418ce0b316a852b2224df586ca896"
+    },
+    {
+      "recipe": "50-openh264.sh",
+      "repository": "https://github.com/cisco/openh264.git",
+      "revision": "8b2d28faade10d74d99ac80e199aef664c9c5a3b"
+    },
+    {
+      "recipe": "50-openjpeg.sh",
+      "repository": "https://github.com/uclouvain/openjpeg.git",
+      "revision": "8314119b067c0fc77834731168daaebd379fdb12"
+    },
+    {
+      "recipe": "50-openmpt.sh",
+      "repository": "https://github.com/OpenMPT/openmpt.git",
+      "revision": "f83cedb0cd5446e4dfaa83ac97e3087107e26767"
+    },
+    {
+      "recipe": "50-rav1e.sh",
+      "repository": "https://github.com/xiph/rav1e.git",
+      "revision": "31435de9d76fddd38f6dcc31d4014574cebb2092"
+    },
+    {
+      "recipe": "50-rubberband.sh",
+      "repository": "https://github.com/breakfastquay/rubberband.git",
+      "revision": "e4296ac80b1170018a110bc326fd0d45a0eb27d6"
+    },
+    {
+      "recipe": "50-sdl.sh",
+      "repository": "https://github.com/libsdl-org/SDL.git",
+      "revision": "b90ac95029d801c5abc59472ba8e2200dff31e1e"
+    },
+    {
+      "recipe": "50-snappy.sh",
+      "repository": "https://github.com/google/snappy.git",
+      "revision": "9c28114a38866f6deeaa826db918293bc28ae410"
+    },
+    {
+      "recipe": "50-soxr.sh",
+      "repository": "https://git.code.sf.net/p/soxr/code",
+      "revision": "945b592b70470e29f917f4de89b4281fbbd540c0"
+    },
+    {
+      "recipe": "50-srt.sh",
+      "repository": "https://github.com/Haivision/srt.git",
+      "revision": "ff8ab25c57aece5b7351defe36dacc94fc28527f"
+    },
+    {
+      "recipe": "50-svtav1.sh",
+      "repository": "https://gitlab.com/AOMediaCodec/SVT-AV1.git",
+      "revision": "5ed9ffbcb5086da23f30fe9bc5b00145358462da"
+    },
+    {
+      "recipe": "50-twolame.sh",
+      "repository": "https://github.com/njh/twolame.git",
+      "revision": "6fced852d4d5cfad58cf9dbe3ea619b08e87d398"
+    },
+    {
+      "recipe": "50-uavs3d.sh",
+      "repository": "https://github.com/uavs3/uavs3d.git",
+      "revision": "0e20d2c291853f196c68922a264bcd8471d75b68"
+    },
+    {
+      "recipe": "50-vaapi/30-libpciaccess.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libpciaccess.git",
+      "revision": "38e6f15f839fba2c49982e7ad61cde681fd5d4d6"
+    },
+    {
+      "recipe": "50-vaapi/40-libdrm.sh",
+      "repository": "https://gitlab.freedesktop.org/mesa/drm.git",
+      "revision": "b97cbde15c5c3abfe44d78e8f57139e50f612fec"
+    },
+    {
+      "recipe": "50-vaapi/50-libva.sh",
+      "repository": "https://github.com/intel/libva.git",
+      "revision": "6b07f7100512817f736967e899b8c26313c20623"
+    },
+    {
+      "recipe": "50-vapoursynth.sh",
+      "repository": "https://github.com/vapoursynth/vapoursynth.git",
+      "revision": "R80"
+    },
+    {
+      "recipe": "50-vidstab.sh",
+      "repository": "https://github.com/georgmartius/vid.stab.git",
+      "revision": "e2445c4081658318223762a696eb1c645c2d7168"
+    },
+    {
+      "recipe": "50-vvenc.sh",
+      "repository": "https://github.com/fraunhoferhhi/vvenc.git",
+      "revision": "b1cfb2ad495af6ae4cc214b7a060e8b4166c4629"
+    },
+    {
+      "recipe": "50-whisper.sh",
+      "repository": "https://github.com/ggml-org/whisper.cpp.git",
+      "revision": "a44e07845931421bb6f3447ce0010ed9dc76a118"
+    },
+    {
+      "recipe": "50-x264.sh",
+      "repository": "https://code.videolan.org/videolan/x264.git",
+      "revision": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee"
+    },
+    {
+      "recipe": "50-x265.sh",
+      "repository": "https://github.com/Multicorewareinc/x265.git",
+      "revision": "020d7054dbecfd3be8e62efe33ff8a305d41856e"
+    },
+    {
+      "recipe": "50-xavs2.sh",
+      "repository": "https://github.com/pkuvcl/xavs2.git",
+      "revision": "eae1e8b9d12468059bdd7dee893508e470fa83d8"
+    },
+    {
+      "recipe": "50-xvid.sh",
+      "repository": "https://svn.xvid.org/trunk/xvidcore",
+      "revision": "2204",
+      "vcs": "svn"
+    },
+    {
+      "recipe": "50-zimg.sh",
+      "repository": "https://github.com/sekrit-twc/zimg.git",
+      "revision": "67e0603271c080e22c8429856dd4a8a56587e61e"
+    },
+    {
+      "recipe": "50-zvbi.sh",
+      "repository": "https://github.com/zapping-vbi/zvbi",
+      "revision": "d3a5ee9f2b047bf16cd1ee5ccf6ec05ee75409d0"
+    }
+  ],
+  "status": "Recipe candidates; not proof of complete corresponding source, platform selection and submodules require verification"
+}

@@ -13,6 +13,8 @@ import tarfile
 import urllib.request
 import zipfile
 
+from third_party_notices import prepare_notices
+
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / 'target'
 VERSION = '0.1.0'
@@ -141,6 +143,7 @@ def package(platform):
     }, indent=2) + '\n')
     licenses = stage / 'Licenses'
     licenses.mkdir()
+    prepare_notices(licenses / 'ThirdParty')
     for item in vendor.iterdir():
         if item.is_file():
             shutil.copy2(item, licenses / item.name)

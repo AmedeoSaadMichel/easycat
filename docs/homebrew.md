@@ -6,7 +6,7 @@ Requirements: an Apple Silicon Mac, macOS 15 Sequoia or later, and Homebrew. Thi
 
 ## Install
 
-Once this repository is public, add the personal tap once and install easycat:
+The current tap points to the private development repository. Public downloads will move to a separate distribution repository; see [private-code distribution](private-code-distribution.md). The commands below show the existing private tap. Public users must use the new tap URL from the generated distribution README:
 
 ```sh
 brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycut.git
