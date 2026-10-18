@@ -10,12 +10,32 @@ The public distribution repository contains the project-maintained cask. Add it 
 
 ```sh
 brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycat-releases.git
+brew trust --cask amedeosaadmichel/easycat/easycat
 brew install --cask easycat
 ```
 
+The trust command authorizes only the easycat cask, not every package or command in the tap. Recent Homebrew versions require explicit trust for non-official taps or their individual packages. See [Homebrew Tap Trust](https://docs.brew.sh/Tap-Trust).
+
 If you previously added the private development tap, run `brew untap AmedeoSaadMichel/easycat` first, then add the public URL above. The explicit URL is required because the repository is named `easycat-releases`. This is a personal tap, not a listing in the official Homebrew catalog.
 
-This preview has an ad-hoc signature and is not notarized with Apple. Homebrew installation does not change that: macOS may require approval through System Settings > Privacy & Security. Do not disable Gatekeeper system-wide.
+## First launch on macOS
+
+This preview has an ad-hoc signature and is not notarized with Apple. Installation can succeed while macOS still requires separate approval at first launch. This applies to both the DMG and Homebrew installations.
+
+1. Open **easycat** from **Applications**.
+2. If macOS blocks it because the developer cannot be verified or the app is not notarized, open **System Settings → Privacy & Security**.
+3. Find the notice for **easycat**, click **Open Anyway**, then confirm the opening. Authenticate if macOS asks.
+
+If the easycat notice is missing, try opening the app again, then return to Privacy & Security. Do not disable Gatekeeper system-wide. See [Apple's instructions](https://support.apple.com/en-us/102445).
+
+## Installation troubleshooting
+
+- **No available formula with the name "easycat":** on a new machine, add the personal tap using the commands above. easycat is not listed in the official Homebrew catalog.
+- **Unknown command: brew --cask:** use `brew install --cask easycat`; `--cask` belongs after `install`.
+- **Refusing to load cask from untrusted tap:** run `brew trust --cask amedeosaadmichel/easycat/easycat`, then retry the installation.
+- **Warnings about other taps**, such as `gromgit/fuse`, `oven-sh/bun` or `wickenico/wailbrew`, are unrelated to easycat. You do not need to trust those taps to install easycat.
+
+The message `easycat was successfully installed!` confirms installation. macOS first-launch approval is a separate step.
 
 ## Upgrade or remove
 

@@ -18,6 +18,13 @@ cask "easycat" do
 
   caveats <<~EOS
     This preview has an ad-hoc signature and is not notarized with Apple.
-    macOS may require approval in System Settings > Privacy & Security.
+
+    First launch:
+      1. Open easycat from Applications.
+      2. If macOS blocks the unnotarized app, open System Settings >
+         Privacy & Security.
+      3. Click Open Anyway for easycat and confirm.
+
+    Homebrew installation does not bypass macOS first-launch approval.
   EOS
 end

@@ -12,6 +12,18 @@ Preview downloads are available for macOS Apple Silicon, Windows x64 and Linux x
 
 Install the macOS Apple Silicon preview through the [project Homebrew tap](docs/homebrew.md) from the public distribution repository. See [distribution with private application source](docs/private-code-distribution.md). Preparation for the official catalog is tracked in the [Homebrew submission checklist](docs/homebrew-submission.md).
 
+### Install with Homebrew
+
+```sh
+brew tap AmedeoSaadMichel/easycat https://github.com/AmedeoSaadMichel/easycat-releases.git
+brew trust --cask amedeosaadmichel/easycat/easycat
+brew install --cask easycat
+```
+
+The trust command authorizes only the easycat cask, not every package or command in the tap. Recent Homebrew versions require explicit trust for non-official taps or their individual packages. See [Homebrew Tap Trust](https://docs.brew.sh/Tap-Trust).
+
+After installation, open easycat from Applications. If macOS blocks this unnotarized preview, go to **System Settings → Privacy & Security → Open Anyway** for easycat and confirm. See the [first-launch steps and troubleshooting](DOWNLOADS.md#first-launch-on-macos-dmg-and-homebrew).
+
 ## Run
 
 FFmpeg and ffprobe must be available on PATH. ffplay enables preview audio.
