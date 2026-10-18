@@ -2,19 +2,19 @@
   "schema_version": 1,
   "platforms": {
     "macos-arm64": {
-      "latest_build": 3,
-      "minimum_build": 1,
-      "version": "0.1.0-preview.3"
+      "latest_build": 4,
+      "minimum_build": 4,
+      "version": "0.1.0-preview.4"
     },
     "windows-x64": {
-      "latest_build": 3,
-      "minimum_build": 1,
-      "version": "0.1.0-preview.3"
+      "latest_build": 4,
+      "minimum_build": 4,
+      "version": "0.1.0-preview.4"
     },
     "linux-x86_64": {
-      "latest_build": 3,
-      "minimum_build": 1,
-      "version": "0.1.0-preview.3"
+      "latest_build": 4,
+      "minimum_build": 4,
+      "version": "0.1.0-preview.4"
     }
   }
 }

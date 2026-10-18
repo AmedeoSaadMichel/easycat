@@ -18,13 +18,14 @@ Connection errors, timeouts, HTTP errors, unsupported platforms, missing HTTPS c
 
 ## Publish a new build
 
-1. Increment `BUILD` and update `VERSION` in `easycut-app/src/updates.rs` before compiling all platform packages. Build 4 is reserved for the first update-aware release.
+1. Increment `BUILD` and update `VERSION` in `easycut-app/src/updates.rs` before compiling all platform packages. Build 4 is the first published update-aware release.
 2. Publish and verify the actual installers, corresponding third-party sources and Homebrew cask first.
 3. Update the relevant platform's `latest_build` and `version` in `distribution/updates.json`. Do not advertise a version before its release downloads work. Platforms can advance independently.
 4. Raise `minimum_build` only when older update-aware builds must be retired. Keep it positive and no greater than `latest_build`.
 5. Copy the reviewed JSON to the root `updates.json` of the public `easycat-releases` repository and publish that file. To roll back a requirement, lower the minimum and check again in the app.
 
-The initial policy advertises the existing preview 3 with minimum build 1. Preview 3 and earlier do not contain the checker and cannot be retroactively blocked. The first update-aware app identifies itself as build 4; release 4 must be published before the policy advertises it. No installer update is implied by publishing a policy alone.
+The live policy advertises preview 4 with latest build 4 and minimum build 4 on all three platforms. It was activated only after anonymous download and checksum verification. Preview 3 and earlier do not contain the checker and cannot be retroactively blocked. Users must install preview 4 once to receive future notifications. A policy-only change does not update an installed binary.
+
 
 ## Transport and privacy
 

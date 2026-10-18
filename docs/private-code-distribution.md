@@ -1,6 +1,9 @@
 # Distribute easycat while keeping its source private
 
-The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.3). The development repository remains private. The public repository contains only download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
+The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.4). The development repository remains private. The public repository contains only download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
+
+Preview 4 adds update notifications and minimum-build enforcement while preserving offline use on failed checks. The native packages use application commit `41cc76610b89469dcd2ce51cff2b77631b47a7e3`. Windows/Linux native tests and packaging checks passed, including the minimum-window notice regression and Linux Xvfb smoke test. macOS signing and image integrity passed. All eight remote asset checksums matched local files, public download URLs were accessible anonymously, and the downloaded DMG matched the Homebrew cask. The policy was activated afterward with latest/minimum build 4 per platform. See [the preview 4 report](../distribution/compliance/release-preview4-verification.json).
+
 
 Preview 3 adds the Buy Me a Coffee footer banner from commit `719affe978e01d4eab0554fbc15d52e6a4118538`. Native Windows/Linux CI completed successfully, including export checks and the Linux Xvfb GUI smoke test. Only native application binaries and build metadata were replaced in the verified bundles; codec binaries, libraries and license files were preserved byte-for-byte. The dependency lock and corresponding source archives are unchanged. See [the update verification report](../distribution/compliance/release-preview3-verification.json).
 
