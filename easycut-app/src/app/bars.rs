@@ -134,22 +134,41 @@ impl App {
                         x += width;
                     }
                 }
-                ui.horizontal_wrapped(|ui| {
-                    ui.label(
-                        RichText::new("Local. Private. No uploads.")
-                            .small()
-                            .color(theme::MUTED),
+                ui.horizontal(|ui| {
+                    let status_width = (ui.available_width() - 180.0).max(0.0);
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(status_width, 28.0),
+                        egui::Layout::left_to_right(egui::Align::Center),
+                        |ui| {
+                            ui.horizontal_wrapped(|ui| {
+                                ui.label(
+                                    RichText::new("Local. Private. No uploads.")
+                                        .small()
+                                        .color(theme::MUTED),
+                                );
+                                if let Some(error) = &self.error {
+                                    ui.colored_label(theme::CORAL, error);
+                                }
+                                if let Some((result, warning)) = &self.result {
+                                    ui.separator();
+                                    ui.label(RichText::new(result).small().color(if *warning {
+                                        theme::CORAL
+                                    } else {
+                                        theme::MINT
+                                    }));
+                                }
+                            });
+                        },
                     );
-                    if let Some(error) = &self.error {
-                        ui.colored_label(theme::CORAL, error);
-                    }
-                    if let Some((result, warning)) = &self.result {
-                        ui.separator();
-                        ui.label(RichText::new(result).small().color(if *warning {
-                            theme::CORAL
-                        } else {
-                            theme::MINT
-                        }));
+                    let support = ui
+                        .add_sized(
+                            [172.0, 28.0],
+                            egui::Button::new(RichText::new("Buy me a coffee").color(theme::BG))
+                                .fill(theme::YELLOW),
+                        )
+                        .on_hover_text("Support easycat · Opens buymeacoffee.com in your browser");
+                    if support.clicked() {
+                        ctx.open_url(egui::OpenUrl::new_tab("https://buymeacoffee.com/asmichel"));
                     }
                 });
             });
