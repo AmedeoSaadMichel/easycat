@@ -35,7 +35,7 @@ brew untap amedeosaadmichel/easycat
 
 ## Maintaining the cask
 
-Update `Casks/easycat.rb` only after uploading and validating a new macOS release. Set `version` to `APP_VERSION,PREVIEW_SUFFIX` (currently `0.1.0,preview.4`); the URL uses these values for the release tag and DMG filename. Replace `sha256` with the checksum of the actual published DMG. Never replace an existing release asset without also updating its checksum.
+Update `Casks/easycat.rb` only after uploading and validating a new macOS release. Set `version` to `APP_VERSION,PREVIEW_SUFFIX` (currently `0.1.0,preview.5`); the URL uses these values for the release tag and DMG filename. Replace `sha256` with the checksum of the actual published DMG. Never replace an existing release asset without also updating its checksum.
 
 The cask deliberately skips automatic release discovery: preview updates must be checked before changing the pinned version. Keep the architecture and minimum macOS requirement aligned with the packaged application's `Info.plist`. Validate changes with Homebrew's cask loader and `brew style Casks/easycat.rb`, then verify the downloaded DMG against the pinned SHA-256.
 

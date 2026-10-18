@@ -1,0 +1,103 @@
+{
+  "status": "passed",
+  "release": "v0.1.0-preview.5",
+  "verified_on": "2026-10-18",
+  "application_source_private": true,
+  "private_source_included": false,
+  "application_build": 5,
+  "cargo_lock_sha256": "e413c9017b46b623e5ffc12a1b052cbac9d9399df2d2089974bde783ec5bd8af",
+  "third_party_versions_sources_and_checksums_unchanged": true,
+  "cargo_lock_change": "Unchanged from preview 4; no dependency or feature changes.",
+  "native_build_run": {
+    "conclusion": "success",
+    "headSha": "183d209c54ab5daac2bd216de599468c927ea79c",
+    "url": "https://github.com/AmedeoSaadMichel/easycut/actions/runs/39125509916"
+  },
+  "validation": {
+    "native_windows": "unit/integration tests, native release build and generated-media export checks passed",
+    "native_linux": "unit/integration tests, native release build, generated-media export checks and Xvfb GUI smoke test passed",
+    "local_format_and_clippy": "passed",
+    "minimum_window_update_notice_regression": "passed",
+    "updates_button_hidden_when_current": "passed",
+    "development_simulations_excluded_from_release": "passed",
+    "minimum_build_export_deferral_and_offline_recovery_tests": "passed"
+  },
+  "platforms": {
+    "windows": {
+      "app_sha256": "13113b083b13410d15a0b07709711eb68bc03b9aaabf20cd1692c9767f9e24ee",
+      "source_commit": "183d209c54ab5daac2bd216de599468c927ea79c",
+      "direct_ffmpeg_library_linkage": false,
+      "libraries": [
+        "kernel32.dll",
+        "ole32.dll",
+        "combase.dll",
+        "shell32.dll",
+        "user32.dll",
+        "shlwapi.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "bcryptprimitives.dll",
+        "OPENGL32.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "SHELL32.dll",
+        "GDI32.dll",
+        "ADVAPI32.dll",
+        "uiautomationcore.dll",
+        "oleaut32.dll",
+        "imm32.dll",
+        "dwmapi.dll",
+        "uxtheme.dll",
+        "ntdll.dll"
+      ],
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 40,
+      "banner_link_present": true,
+      "update_checker_present": true,
+      "application_build": 5,
+      "license_bundle_preserved": true
+    },
+    "linux": {
+      "app_sha256": "c9151848ce94ce5dc0c845c0a2a5971e6c34ec8def42401c7fa657bf3c4a8fb0",
+      "source_commit": "183d209c54ab5daac2bd216de599468c927ea79c",
+      "direct_ffmpeg_library_linkage": false,
+      "libraries": [
+        "libgcc_s.so.1",
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 27,
+      "banner_link_present": true,
+      "update_checker_present": true,
+      "application_build": 5,
+      "license_bundle_preserved": true
+    },
+    "macos": {
+      "application_build": 5,
+      "app_sha256": "95bf5fccc00bd24def162679f60ebe6e5a7cfe32c206852aba5e4403c8949961",
+      "source_commit": "183d209c54ab5daac2bd216de599468c927ea79c",
+      "update_checker_present": true,
+      "bundled_helpers_and_libraries_unchanged": true,
+      "license_bundle_preserved": true,
+      "signature": "ad-hoc, codesign deep/strict verified",
+      "dmg_integrity": "hdiutil verified"
+    }
+  },
+  "update_policy": {
+    "latest_build": 5,
+    "minimum_build": 4,
+    "per_platform": true,
+    "failures_preserve_offline_use": true,
+    "automatic_installation": false,
+    "legacy_builds_without_checker_cannot_be_retroactively_blocked": true
+  },
+  "dependency_verification_baseline": "https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/RELEASE-VERIFICATION.json",
+  "scope": "Native update-aware application release. Codec tools, libraries and license files are preserved byte-for-byte from verified bundles. Corresponding third-party sources are unchanged. No full dependency toolchain reconstruction or exhaustive interactive desktop certification is claimed.",
+  "preview_limits": [
+    "macOS ad-hoc signed, not notarized",
+    "Windows unsigned",
+    "Linux requires /usr/bin/curl for update checks; missing clients preserve local use",
+    "Windows manual interactive GUI certification remains outside scope"
+  ]
+}

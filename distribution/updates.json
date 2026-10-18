@@ -2,19 +2,19 @@
   "schema_version": 1,
   "platforms": {
     "macos-arm64": {
-      "latest_build": 4,
+      "latest_build": 5,
       "minimum_build": 4,
-      "version": "0.1.0-preview.4"
+      "version": "0.1.0-preview.5"
     },
     "windows-x64": {
-      "latest_build": 4,
+      "latest_build": 5,
       "minimum_build": 4,
-      "version": "0.1.0-preview.4"
+      "version": "0.1.0-preview.5"
     },
     "linux-x86_64": {
-      "latest_build": 4,
+      "latest_build": 5,
       "minimum_build": 4,
-      "version": "0.1.0-preview.4"
+      "version": "0.1.0-preview.5"
     }
   }
 }
