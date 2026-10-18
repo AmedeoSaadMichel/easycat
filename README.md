@@ -68,3 +68,5 @@ cargo run -p easycut-cli -- remux camera.mov output.mkv --exclude-track 2
 ```
 
 Repeat `--exclude-track` for additional incompatible optional tracks. Unknown indices, compatible-track exclusions and video/audio exclusions are rejected. Generated MOV/timecode integration coverage verifies that default conversion is rejected, explicit omission succeeds, and video plus both audio tracks keep their original encoded-data hashes.
+
+Update-aware development builds support [update notices and a per-platform minimum build](docs/app-updates.md), with offline use preserved when the check fails. Published preview 3 predates this feature.

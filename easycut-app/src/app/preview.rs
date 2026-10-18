@@ -433,3 +433,47 @@ fn transport_skips_seconds_clamps_to_selection_and_adjusts_preview_volume() {
     assert!(!app.muted);
     assert_eq!(app.volume, 35);
 }
+
+#[test]
+fn minimum_build_gate_waits_for_export_and_blocks_new_exports() {
+    use crate::updates::{Release, Status, BUILD};
+    use std::sync::atomic::Ordering;
+    let ctx = egui::Context::default();
+    let mut app = App::new(None, &ctx);
+    let info = easycut_core::probe::parse_probe(r#"{"streams":[{"codec_type":"video","codec_name":"h264","width":160,"height":96}],"format":{"duration":"2"}}"#).unwrap();
+    let (tx, _rx) = channel();
+    app.video = Some(Video::new("fixture.mp4".into(), info, vec![], tx, false));
+    app.updates.status = Status::Required(Release {
+        latest_build: BUILD + 1,
+        minimum_build: BUILD + 1,
+        version: "0.1.0-preview.5".into(),
+    });
+    let cancel = Arc::new(AtomicBool::new(false));
+    app.export_cancel = Some(cancel.clone());
+    app.exporting = true;
+    assert!(!app.enforce_minimum_build());
+    assert!(!cancel.load(Ordering::Relaxed));
+    assert!(app.exporting);
+    app.exporting = false;
+    let playback = Arc::new(AtomicBool::new(false));
+    let measurement = Arc::new(AtomicBool::new(false));
+    app.play = Some(Play {
+        id: 1,
+        stop: playback.clone(),
+    });
+    app.measure = Some(Measure {
+        id: 1,
+        stop: measurement.clone(),
+        done: 0,
+        total: 1,
+    });
+    app.preview_fullscreen = true;
+    assert!(app.enforce_minimum_build());
+    assert!(playback.load(Ordering::Relaxed));
+    assert!(measurement.load(Ordering::Relaxed));
+    assert!(!app.preview_fullscreen);
+    app.start_export(&ctx);
+    assert!(!app.exporting);
+    app.updates.status = Status::Unavailable;
+    assert!(!app.enforce_minimum_build());
+}

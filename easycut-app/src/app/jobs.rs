@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 impl App {
     pub(super) fn start_export(&mut self, ctx: &egui::Context) {
-        if self.exporting || self.video.is_none() {
+        if self.exporting || self.video.is_none() || self.updates.required() {
             return;
         }
         if let Some(reason) = self.video.as_ref().and_then(|v| v.export_blocker()) {

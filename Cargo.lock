@@ -931,6 +931,8 @@ dependencies = [
  "easycut-core",
  "eframe",
  "rfd",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

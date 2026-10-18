@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "platforms": {
+    "macos-arm64": {
+      "latest_build": 3,
+      "minimum_build": 1,
+      "version": "0.1.0-preview.3"
+    },
+    "windows-x64": {
+      "latest_build": 3,
+      "minimum_build": 1,
+      "version": "0.1.0-preview.3"
+    },
+    "linux-x86_64": {
+      "latest_build": 3,
+      "minimum_build": 1,
+      "version": "0.1.0-preview.3"
+    }
+  }
+}

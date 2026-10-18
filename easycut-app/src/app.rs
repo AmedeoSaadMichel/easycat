@@ -67,6 +67,7 @@ pub struct App {
     decorations: Option<egui::TextureHandle>,
     footer_art: Option<egui::TextureHandle>,
     preview_fullscreen: bool,
+    updates: crate::updates::Updates,
     window_resize: crate::window_resize::WindowResize,
 }
 
@@ -104,8 +105,23 @@ impl App {
             decorations: crate::theme::load_decorations(ctx),
             footer_art: crate::theme::load_footer(ctx),
             preview_fullscreen: false,
+            updates: Default::default(),
             window_resize: Default::default(),
         }
+    }
+
+    fn enforce_minimum_build(&mut self) -> bool {
+        if !self.updates.required() || self.exporting {
+            return false;
+        }
+        self.stop_play();
+        self.stop_measure();
+        self.preview_fullscreen = false;
+        true
+    }
+
+    pub(crate) fn check_for_updates(&mut self, ctx: &egui::Context) {
+        self.updates.check(ctx);
     }
 
     fn load(&mut self, ctx: &egui::Context, path: PathBuf) {
@@ -218,6 +234,16 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
+        self.poll(ctx);
+        self.updates.poll();
+        // Finish an existing export before enforcing a newly received minimum build.
+        if self.enforce_minimum_build() {
+            self.top_bar(ctx);
+            self.bottom_bar(ctx);
+            self.updates.required_panel(ctx);
+            self.window_resize.show(ctx);
+            return;
+        }
         if let Some(p) = self.initial.take() {
             self.load(ctx, p);
         }
@@ -231,7 +257,6 @@ impl eframe::App for App {
         if !self.exporting && ctx.input_mut(|i| i.consume_shortcut(&open_shortcut)) {
             self.pick_requested = true;
         }
-        self.poll(ctx);
         if self.preview_fullscreen {
             let frame = self
                 .video
@@ -251,6 +276,7 @@ impl eframe::App for App {
         }
         self.top_bar(ctx);
         self.bottom_bar(ctx);
+        self.updates.notice(ctx, self.exporting);
         if self
             .video
             .as_mut()

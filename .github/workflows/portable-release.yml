@@ -46,6 +46,7 @@ jobs:
           restore-keys: |
             native-v2-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}-
             native-v1-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+            native-v2-${{ runner.os }}-
       - name: Prepare verified FFmpeg tools
         run: python scripts/package_portable.py prepare ${{ matrix.platform }}
       - name: Unit and integration tests

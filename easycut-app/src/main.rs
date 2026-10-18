@@ -9,6 +9,7 @@ mod panels;
 mod runtime;
 mod theme;
 mod timeline;
+mod updates;
 mod video;
 mod window_chrome;
 mod window_resize;
@@ -30,7 +31,9 @@ fn main() -> eframe::Result {
         options,
         Box::new(|cc| {
             theme::install(&cc.egui_ctx);
-            Ok(Box::new(app::App::new(initial, &cc.egui_ctx)))
+            let mut app = app::App::new(initial, &cc.egui_ctx);
+            app.check_for_updates(&cc.egui_ctx);
+            Ok(Box::new(app))
         }),
     )
 }

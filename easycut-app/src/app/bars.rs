@@ -83,7 +83,7 @@ impl App {
                     egui::pos2(rect.right() - 163.0, rect.bottom() - 44.0),
                     egui::vec2(145.0, 38.0),
                 );
-                let open = ui.add_enabled_ui(!self.exporting, |ui| {
+                let open = ui.add_enabled_ui(!self.exporting && !self.updates.required(), |ui| {
                     ui.put(
                         open_rect,
                         egui::Button::new("Open video")
@@ -141,6 +141,7 @@ impl App {
                         egui::Layout::left_to_right(egui::Align::Center),
                         |ui| {
                             ui.horizontal_wrapped(|ui| {
+                                self.updates.footer(ui);
                                 ui.label(
                                     RichText::new("Local. Private. No uploads.")
                                         .small()
