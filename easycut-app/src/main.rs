@@ -25,13 +25,42 @@ fn main() -> eframe::Result {
         persist_window: false,
         ..Default::default()
     };
-    let initial = std::env::args_os().nth(1).map(PathBuf::from);
+    let argument = std::env::args_os().nth(1);
+    #[cfg(debug_assertions)]
+    let simulation = argument.as_ref().and_then(|a| match a.to_str() {
+        Some("--simulate-update=optional") => Some(false),
+        Some("--simulate-update=required") => Some(true),
+        _ => None,
+    });
+    #[cfg(debug_assertions)]
+    let initial = if simulation.is_some() {
+        None
+    } else {
+        argument.map(PathBuf::from)
+    };
+    #[cfg(not(debug_assertions))]
+    let initial = argument.map(PathBuf::from);
+    #[cfg(debug_assertions)]
+    let title = match simulation {
+        Some(false) => "easycat · Optional update simulation",
+        Some(true) => "easycat · Required update simulation",
+        None => "easycat",
+    };
+    #[cfg(not(debug_assertions))]
+    let title = "easycat";
     eframe::run_native(
-        "easycat",
+        title,
         options,
         Box::new(|cc| {
             theme::install(&cc.egui_ctx);
             let mut app = app::App::new(initial, &cc.egui_ctx);
+            #[cfg(debug_assertions)]
+            if let Some(required) = simulation {
+                app.simulate_update(required);
+            } else {
+                app.check_for_updates(&cc.egui_ctx);
+            }
+            #[cfg(not(debug_assertions))]
             app.check_for_updates(&cc.egui_ctx);
             Ok(Box::new(app))
         }),

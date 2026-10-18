@@ -120,6 +120,11 @@ impl App {
         true
     }
 
+    #[cfg(debug_assertions)]
+    pub(crate) fn simulate_update(&mut self, required: bool) {
+        self.updates.simulate(required);
+    }
+
     pub(crate) fn check_for_updates(&mut self, ctx: &egui::Context) {
         self.updates.check(ctx);
     }

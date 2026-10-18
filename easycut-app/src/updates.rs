@@ -9,8 +9,8 @@ use std::collections::HashMap;
 use std::sync::mpsc::{self, Receiver};
 
 /// Monotonic application build; increment for every newly distributed app build.
-pub const BUILD: u64 = 4;
-pub const VERSION: &str = "0.1.0-preview.4";
+pub const BUILD: u64 = 5;
+pub const VERSION: &str = "0.1.0-preview.5";
 const REPOSITORY: &str = "https://github.com/AmedeoSaadMichel/easycat-releases";
 const MANIFEST_URL: &str =
     "https://raw.githubusercontent.com/AmedeoSaadMichel/easycat-releases/main/updates.json";
@@ -95,10 +95,43 @@ pub struct Updates {
     pub status: Status,
     receiver: Option<Receiver<Result<Release, String>>>,
     dismissed: bool,
+    #[cfg(debug_assertions)]
+    simulation: Option<bool>,
 }
 
 impl Updates {
+    pub fn simulated(&self) -> bool {
+        #[cfg(debug_assertions)]
+        {
+            self.simulation.is_some()
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            false
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    pub fn simulate(&mut self, required: bool) {
+        self.simulation = Some(required);
+        self.receiver = None;
+        self.dismissed = false;
+        self.status = evaluate(
+            Ok(Release {
+                latest_build: BUILD + 1,
+                minimum_build: if required { BUILD + 1 } else { BUILD },
+                version: format!("0.1.0-preview.{}", BUILD + 1),
+            }),
+            BUILD,
+        );
+    }
+
     pub fn check(&mut self, ctx: &egui::Context) {
+        #[cfg(debug_assertions)]
+        if let Some(required) = self.simulation {
+            self.simulate(required);
+            return;
+        }
         if self.receiver.is_some() {
             return;
         }
@@ -176,6 +209,25 @@ mod tests {
         }
     }
 
+    #[cfg(debug_assertions)]
+    #[test]
+    fn simulations_keep_retries_local_and_distinguish_optional_from_required() {
+        let ctx = egui::Context::default();
+        let mut updates = Updates::default();
+        for required in [false, true] {
+            updates.simulate(required);
+            assert!(updates.simulated());
+            assert_eq!(updates.required(), required);
+            assert!(matches!(
+                updates.status,
+                Status::Available(_) | Status::Required(_)
+            ));
+            updates.check(&ctx);
+            assert!(updates.receiver.is_none());
+            assert_eq!(updates.required(), required);
+        }
+    }
+
     #[test]
     fn maintained_public_policy_is_valid_for_all_supported_platforms() {
         let bytes = include_bytes!("../../distribution/updates.json");
@@ -196,6 +248,8 @@ mod tests {
             status: Status::Required(release()),
             receiver: Some(rx),
             dismissed: false,
+            #[cfg(debug_assertions)]
+            simulation: None,
         };
         updates.poll();
         assert!(updates.required());

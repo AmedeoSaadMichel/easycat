@@ -1,6 +1,6 @@
 # Update notifications and minimum supported builds
 
-Update-aware easycat builds check the public policy once at startup, off the UI thread. The footer **Updates** button checks again. Downloads open the release page in the external browser; the app never installs or replaces itself automatically.
+Update-aware easycat builds check the public policy once at startup, off the UI thread. The footer **Updates** button checks again when an update is available or a check has failed. It stays hidden while checking and when the app is current. Downloads open the release page in the external browser; the app never installs or replaces itself automatically.
 
 The endpoint is `https://raw.githubusercontent.com/AmedeoSaadMichel/easycat-releases/main/updates.json`. The maintained copy is `distribution/updates.json`. Only this policy is public; application source stays private.
 
@@ -32,3 +32,12 @@ The live policy advertises preview 4 with latest build 4 and minimum build 4 on 
 The checker uses the system `curl` executable over HTTPS: `/usr/bin/curl` on macOS/Linux and `System32/curl.exe` on Windows. If unavailable, the check fails and local use continues. Linux users need curl installed to receive notifications. No new networking library or bundled executable is introduced. The existing locked serde/serde_json packages are declared directly by the app; third-party package versions and source materials are unchanged.
 
 Requests contain no video paths, media, account identifiers or usage events. GitHub receives normal connection metadata, including the request IP. Local curl configuration is disabled. Connections and responses have time/size limits, TLS verification remains enabled, and redirects are not followed. The UI stays responsive while the request runs. Tests use injected responses and never contact the network.
+
+## Local simulations
+
+Development builds accept `--simulate-update=optional` or `--simulate-update=required`. Each opens a clearly marked local simulation of the next build against the current build. Retry remains local and the download button is disabled; public policy is never changed. These flags and their state overrides are excluded from release builds.
+
+```sh
+cargo run -p easycut-app -- --simulate-update=optional
+cargo run -p easycut-app -- --simulate-update=required
+```
