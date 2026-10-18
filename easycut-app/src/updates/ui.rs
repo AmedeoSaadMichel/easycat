@@ -33,26 +33,36 @@ impl Updates {
             Status::Required(release) if exporting => (release.clone(), true),
             _ => return,
         };
-        egui::TopBottomPanel::top("update_notice")
-            .frame(egui::Frame::none().fill(theme::SURFACE).inner_margin(8.0))
-            .show(ctx, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.label(
-                        RichText::new(if required {
-                            "Update required after this export finishes.".to_owned()
-                        } else {
-                            format!("easycat {} is available.", release.version)
-                        })
-                        .color(theme::CREAM),
-                    );
-                    if ui.button("Download update").clicked() {
-                        ctx.open_url(egui::OpenUrl::new_tab(release.url()));
-                    }
-                    if !required && ui.small_button("Later").clicked() {
-                        self.dismissed = true;
-                    }
-                });
+        egui::Window::new(if required {
+            "Update required"
+        } else {
+            "Update available"
+        })
+        .id(egui::Id::new("update_notice"))
+        .anchor(egui::Align2::LEFT_TOP, egui::vec2(20.0, 100.0))
+        .collapsible(false)
+        .resizable(false)
+        .default_width(360.0)
+        .max_width((ctx.screen_rect().width() * 0.5).clamp(220.0, 420.0))
+        .frame(egui::Frame::window(&ctx.style()).fill(theme::SURFACE))
+        .show(ctx, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.label(
+                    RichText::new(if required {
+                        "Update required after this export finishes.".to_owned()
+                    } else {
+                        format!("easycat {} is available.", release.version)
+                    })
+                    .color(theme::CREAM),
+                );
+                if ui.button("Download update").clicked() {
+                    ctx.open_url(egui::OpenUrl::new_tab(release.url()));
+                }
+                if !required && ui.small_button("Later").clicked() {
+                    self.dismissed = true;
+                }
             });
+        });
     }
 
     pub fn required_panel(&mut self, ctx: &egui::Context) {

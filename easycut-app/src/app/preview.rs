@@ -477,3 +477,61 @@ fn minimum_build_gate_waits_for_export_and_blocks_new_exports() {
     app.updates.status = Status::Unavailable;
     assert!(!app.enforce_minimum_build());
 }
+
+#[test]
+fn update_notice_keeps_export_and_settings_accessible_at_minimum_size() {
+    let ctx = egui::Context::default();
+    theme::install(&ctx);
+    let mut app = App::new(None, &ctx);
+    let info = easycut_core::probe::parse_probe(r#"{"streams":[{"codec_type":"video","codec_name":"h264","width":1920,"height":1080}],"format":{"duration":"42"}}"#).unwrap();
+    let presets = presets::builtin(&info, &HashSet::from(["libx264".into(), "libx265".into()]));
+    let (tx, _rx) = channel();
+    let mut video = Video::new("fixture.mp4".into(), info, presets, tx, false);
+    video.choice = Choice::Preset(0);
+    app.video = Some(video);
+    app.updates.status = crate::updates::Status::Available(crate::updates::Release {
+        latest_build: 5,
+        minimum_build: 4,
+        version: "0.1.0-preview.5".into(),
+    });
+    for _ in 0..3 {
+        let output = ctx.run(
+            egui::RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, egui::vec2(1180.0, 850.0))),
+                ..Default::default()
+            },
+            |ctx| {
+                app.top_bar(ctx);
+                app.bottom_bar(ctx);
+                app.updates.notice(ctx, false);
+                app.export_panel(ctx);
+                app.center(ctx);
+            },
+        );
+        let mut hardware = None;
+        let mut estimate = None;
+        for shape in &output.shapes {
+            if let egui::Shape::Text(text) = &shape.shape {
+                let bounds = Rect::from_min_size(text.pos, text.galley.size());
+                if ["Export video", "Download update", "Hardware acceleration"]
+                    .contains(&text.galley.text())
+                {
+                    assert!(
+                        shape.clip_rect.contains_rect(bounds),
+                        "clipped {}",
+                        text.galley.text()
+                    );
+                }
+                if text.galley.text() == "Hardware acceleration" {
+                    hardware = Some(bounds.bottom());
+                }
+                if text.galley.text() == "Rough estimate" {
+                    estimate = Some(bounds.top());
+                }
+            }
+        }
+        if let (Some(bottom), Some(top)) = (hardware, estimate) {
+            assert!(bottom <= top, "update notice overlaps export settings");
+        }
+    }
+}
