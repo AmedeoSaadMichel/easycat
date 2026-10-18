@@ -1,0 +1,86 @@
+{
+  "status": "passed",
+  "release": "v0.1.0-preview.3",
+  "verified_on": "2026-10-18",
+  "change": "Buy Me a Coffee footer banner; opens the external browser only on click",
+  "application_source_private": true,
+  "private_source_included": false,
+  "cargo_lock_sha256": "d6d8c3585a1c883c260871d0627316ae607822a68c7dcf2457fe3307fcb69d87",
+  "dependency_versions_unchanged": true,
+  "dependency_source_and_license_baseline": "https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/RELEASE-VERIFICATION.json",
+  "native_build_run": {
+    "url": "https://github.com/AmedeoSaadMichel/easycut/actions/runs/39112748212",
+    "status": "success",
+    "source_commit": "719affe978e01d4eab0554fbc15d52e6a4118538",
+    "windows": "tests, release build and generated-media export checks passed",
+    "linux": "tests, release build, generated-media export checks and Xvfb GUI smoke test passed"
+  },
+  "local_validation": {
+    "format": "passed",
+    "clippy": "passed",
+    "workspace_tests": "58 passed"
+  },
+  "platforms": {
+    "windows": {
+      "app_sha256": "037d2f7df6c866b40c0c41547e6bb4657da4004db677cf420f12c98d090546e1",
+      "source_commit": "719affe978e01d4eab0554fbc15d52e6a4118538",
+      "direct_ffmpeg_library_linkage": false,
+      "libraries": [
+        "kernel32.dll",
+        "ole32.dll",
+        "combase.dll",
+        "shell32.dll",
+        "user32.dll",
+        "shlwapi.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "bcryptprimitives.dll",
+        "OPENGL32.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "SHELL32.dll",
+        "GDI32.dll",
+        "ADVAPI32.dll",
+        "uiautomationcore.dll",
+        "oleaut32.dll",
+        "imm32.dll",
+        "dwmapi.dll",
+        "uxtheme.dll",
+        "ntdll.dll"
+      ],
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 40,
+      "banner_link_present": true,
+      "license_bundle_preserved": true
+    },
+    "linux": {
+      "app_sha256": "dea6fd92b5c6f2653fa67e5ecee6ddf92f95354ed1d5a6537da23fd761fef81e",
+      "source_commit": "719affe978e01d4eab0554fbc15d52e6a4118538",
+      "direct_ffmpeg_library_linkage": false,
+      "libraries": [
+        "libgcc_s.so.1",
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 27,
+      "banner_link_present": true,
+      "license_bundle_preserved": true
+    },
+    "macos": {
+      "app_sha256": "b54cb816b7c16f95ff9b432c05309b887de91b13df337232944559cc43148f7c",
+      "source_commit": "719affe978e01d4eab0554fbc15d52e6a4118538",
+      "banner_link_present": true,
+      "bundled_helpers_and_libraries_unchanged": true,
+      "license_bundle_preserved": true,
+      "signature": "ad-hoc; codesign deep/strict verified",
+      "dmg_integrity": "hdiutil verified"
+    }
+  },
+  "scope": "Native application update. The new Windows/Linux binaries were copied from their verified CI packages into the previously verified bundles; codec binaries, libraries and license files were preserved byte-for-byte. Corresponding third-party source archives are identical to preview 2. No new full dependency toolchain reconstruction or interactive desktop certification is claimed.",
+  "preview_limits": [
+    "macOS ad-hoc signed, not notarized",
+    "Windows unsigned",
+    "No manual interactive Windows GUI certification"
+  ]
+}

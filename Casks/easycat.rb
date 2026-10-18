@@ -1,6 +1,6 @@
 cask "easycat" do
-  version "0.1.0,preview.2"
-  sha256 "f87fe67c463e6be99ac66f57d3401e56e00701d577581bf07c1f07a222e8753c"
+  version "0.1.0,preview.3"
+  sha256 "ac0459a649591ae97cbe20f9b3c1bdf37ee227a6e66d8ea1663854271fe708a4"
 
   url "https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v#{version.csv.first}-#{version.csv.second}/easycat-#{version.csv.first}-macos-arm64-legal-preview.dmg"
   name "easycat"

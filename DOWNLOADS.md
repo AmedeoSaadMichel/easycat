@@ -4,16 +4,18 @@
 
 **Cut. Transform. Meow.** Trim, compress and change video containers on your computer. No accounts, uploads or cloud processing.
 
+The latest preview adds a Buy Me a Coffee support banner in the app footer.
+
 ## Choose your system
 
 | System | Download | Requirements / status |
 | --- | --- | --- |
-| macOS · Apple Silicon | [Download DMG](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/easycat-0.1.0-macos-arm64-legal-preview.dmg) | macOS 15 or later · preview build |
+| macOS · Apple Silicon | [Download DMG](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.3/easycat-0.1.0-macos-arm64-legal-preview.dmg) | macOS 15 or later · preview build |
 | macOS · Intel | Not available yet | No Intel or universal package has been built or tested |
-| Windows · x64 | [Download portable ZIP](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/easycat-0.1.0-windows-x64-legal-preview.zip) | Windows 10/11 x64 · unsigned preview |
-| Linux · x64 | [Download portable tar.gz](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/easycat-0.1.0-linux-x86_64-legal-preview.tar.gz) | glibc 2.35+ / Ubuntu 22.04+ · desktop with OpenGL |
+| Windows · x64 | [Download portable ZIP](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.3/easycat-0.1.0-windows-x64-legal-preview.zip) | Windows 10/11 x64 · unsigned preview |
+| Linux · x64 | [Download portable tar.gz](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.3/easycat-0.1.0-linux-x86_64-legal-preview.tar.gz) | glibc 2.35+ / Ubuntu 22.04+ · desktop with OpenGL |
 
-[Release details and files](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.2) · [SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/SHA256SUMS) · [Report a problem](https://github.com/AmedeoSaadMichel/easycat-releases/issues)
+[Release details and files](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.3) · [SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.3/SHA256SUMS) · [Report a problem](https://github.com/AmedeoSaadMichel/easycat-releases/issues)
 
 Packages are compiled and tested on native CI runners. Windows desktop interaction still needs hands-on validation; Linux startup/rendering is checked under Xvfb. Intel Mac packages will receive download links when ready. Public downloads and corresponding third-party sources are hosted in a separate distribution repository; the application source remains private. See the [distribution preparation](docs/private-code-distribution.md).
 
@@ -46,7 +48,7 @@ brew install --cask easycat
 
 The pink cat icon is embedded in the executable. Rust, Homebrew and a separate FFmpeg installation are not required. This unsigned preview may trigger a Windows security warning. An OpenGL-capable graphics driver is required.
 
-[Windows SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/SHA256SUMS)
+[Windows SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.3/SHA256SUMS)
 
 ## Install on Linux
 
@@ -60,7 +62,7 @@ cd easycat-0.1.0-linux-x86_64
 
 Keep **lib** and **Helpers** in place. Requires a Linux x86_64 desktop with glibc 2.35 or later (Ubuntu 22.04 or compatible), X11 or Wayland, an OpenGL-capable graphics driver and xdg-desktop-portal for file dialogs. FFmpeg, ffprobe and ffplay are included; Rust is not required.
 
-[Linux SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/SHA256SUMS)
+[Linux SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.3/SHA256SUMS)
 
 Windows and Linux currently use software encoding. Hardware-accelerated export is implemented for macOS only. All packages are test previews; source/build provenance is included in each archive. See [native packaging and validation details](docs/portable-packages.md).
 

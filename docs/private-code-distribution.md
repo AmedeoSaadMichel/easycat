@@ -1,6 +1,8 @@
 # Distribute easycat while keeping its source private
 
-The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.2). The development repository remains private. The public repository contains only download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
+The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.3). The development repository remains private. The public repository contains only download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
+
+Preview 3 adds the Buy Me a Coffee footer banner from commit `719affe978e01d4eab0554fbc15d52e6a4118538`. Native Windows/Linux CI completed successfully, including export checks and the Linux Xvfb GUI smoke test. Only native application binaries and build metadata were replaced in the verified bundles; codec binaries, libraries and license files were preserved byte-for-byte. The dependency lock and corresponding source archives are unchanged. See [the update verification report](../distribution/compliance/release-preview3-verification.json).
 
 Publication verification: all eight uploaded assets matched local SHA-256 hashes and sizes. All installer and source download URLs were accessible without authentication. The public macOS DMG was downloaded anonymously and matched the cask checksum. Homebrew loaded the public tap and its cask metadata successfully; `brew style` passed. No installation or GUI smoke test was performed during publication.
 
