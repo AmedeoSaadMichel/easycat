@@ -37,6 +37,11 @@ def environment():
 def tools():
     assert os.uname().machine == 'x86_64'
     run(['brew', 'update'])
+    tap = PREFIX / 'Homebrew/Library/Taps/easycat/homebrew-intel/Formula'
+    tap.mkdir(parents=True, exist_ok=True)
+    import shutil
+    for recipe in (ROOT / 'distribution/compliance/intel-formulae').glob('*.rb'):
+        shutil.copy2(recipe, tap / recipe.name)
     run([sys.executable, '-m', 'venv', TOOLS])
     run([TOOLS / 'bin/python', '-m', 'pip', 'install', 'meson==1.12.1'])
     # Superenv resolves declared build tools through opt; Meson runs on hosted Python.
@@ -68,7 +73,7 @@ def install(name):
     env = environment()
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
         # Runtime versions stay pinned; existing CMake/Python avoid costly tool upgrades.
-        run(['brew', 'install', '--ignore-dependencies', name], env=env)
+        run(['brew', 'install', '--ignore-dependencies', 'easycat/intel/' + name], env=env)
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
         raise RuntimeError(f'Expected pinned media package is missing: {keg}')
     opt = PREFIX / 'opt' / name
