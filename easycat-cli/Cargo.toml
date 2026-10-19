@@ -1,0 +1,13 @@
+[package]
+name = "easycat-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "easycat"
+path = "src/main.rs"
+
+[dependencies]
+easycat-core = { path = "../easycat-core" }
+clap = { version = "4", features = ["derive"] }

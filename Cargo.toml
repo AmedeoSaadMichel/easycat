@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["easycut-core", "easycut-cli", "easycut-app"]
+members = ["easycat-core", "easycat-cli", "easycat-app"]
 
 [workspace.package]
 version = "0.1.0"

@@ -52,9 +52,14 @@ def main():
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', args.repository):
         parser.error('Repository must be OWNER/REPO')
+    # Reject both the current source repository and its pre-rename URL.
     if args.repository.lower() in {'amedeosaadmichel/easycut', 'amedeosaadmichel/easycat'}:
         parser.error('Use the separate distribution repository for download assets')
-    if digest(ROOT / 'Cargo.lock') != 'd6d8c3585a1c883c260871d0627316ae607822a68c7dcf2457fe3307fcb69d87':
+    # Both locks have identical third-party dependencies; only workspace names differ.
+    if digest(ROOT / 'Cargo.lock') not in {
+        'd6d8c3585a1c883c260871d0627316ae607822a68c7dcf2457fe3307fcb69d87',
+        'a798e23639aad4e80f9b8f79b513fd6a8ef32d08da7e2df186a9bb027716704c',
+    }:
         parser.error('The original preview dependency lock changed; re-audit the actual binary dependencies')
     verification = json.loads((ROOT / 'distribution/compliance/release-verification.json').read_text())
     if verification.get('status') != 'passed' or not verification.get('ready_for_public_preview'):
@@ -141,6 +146,7 @@ def main():
     cask.parent.mkdir(exist_ok=args.resume)
     text = (ROOT / 'Casks/easycat.rb').read_text()
     text = text.replace('0.1.0,preview.1', '0.1.0,preview.2').replace(ORIGINALS['easycat-0.1.0-macos-arm64.dmg'], checksums[mac_dmg.name])
+    # Older preview casks can still contain the pre-rename repository URL.
     text = text.replace('AmedeoSaadMichel/easycut', args.repository).replace('-macos-arm64.dmg', '-macos-arm64-legal-preview.dmg')
     cask.write_text(text)
     (output / 'PREPARATION-STATUS.json').write_text(json.dumps({

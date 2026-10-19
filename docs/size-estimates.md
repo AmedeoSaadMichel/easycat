@@ -14,7 +14,7 @@ Software H.264 at CRF 28, balanced speed, MP4 output with audio. These measureme
 Reproduce with:
 
 ```sh
-cargo test -p easycut-core --test integration -- --nocapture
+cargo test -p easycat-core --test integration -- --nocapture
 ```
 
 The short-clip check requires error below 5%; the longer selection allows 15% to account for shorter GOPs from independent sample starts. Both must improve on the heuristic in their controlled fixtures.

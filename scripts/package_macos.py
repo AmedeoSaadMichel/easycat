@@ -43,7 +43,7 @@ def main():
         raise SystemExit(f'Remove or rename the previous generated staging bundle first: {APP}')
     for directory in [FRAMEWORKS, RESOURCES, HELPERS, MACOS, OUT]:
         directory.mkdir(parents=True, exist_ok=True)
-    binary = ROOT / 'target/release/easycut-app'
+    binary = ROOT / 'target/release/easycat-app'
     shutil.copy2(binary, MACOS / 'easycat-bin')
     queue = [(binary.resolve(), MACOS / 'easycat-bin')]
     for name in ['ffmpeg', 'ffprobe', 'ffplay']:
@@ -102,7 +102,7 @@ def main():
         formula = package / '.brew'
         if formula.exists():
             shutil.copytree(formula, destination / 'formula')
-    for item in (ROOT / 'easycut-app/assets').glob('*OFL.txt'):
+    for item in (ROOT / 'easycat-app/assets').glob('*OFL.txt'):
         shutil.copy2(item, licenses / item.name)
     (RESOURCES / 'dependency-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     if (FRAMEWORKS / 'libSDL3.0.dylib').exists():
@@ -116,7 +116,7 @@ exec "$contents/MacOS/easycat-bin" "$@"
     launcher.chmod(0o755)
     iconset = STAGE.parent / 'easycat.iconset'
     iconset.mkdir(exist_ok=True)
-    icon_source = ROOT / 'easycut-app/assets/app-icon.png'
+    icon_source = ROOT / 'easycat-app/assets/app-icon.png'
     for size in [16, 32, 128, 256, 512]:
         for density in [1, 2]:
             suffix = '@2x' if density == 2 else ''

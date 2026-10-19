@@ -19,11 +19,11 @@ Do not perform these actions without explicit user confirmation:
 - **Git:** commit, push, reset --hard, rebase, or any command changing history or remotes. Propose the command and wait for authorization.
 - **AI attribution:** NEVER add AI names or attribution to commit messages, PRs or Git metadata. No AI Co-Authored-By or Generated with trailers; describe the change itself.
 - **Dependencies:** adding, removing or updating crates in Cargo.toml.
-- **Architecture:** changing boundaries between easycut-core, easycut-cli and easycut-app.
+- **Architecture:** changing boundaries between easycat-core, easycat-cli and easycat-app.
 - **FFmpeg pipeline:** changing command construction, encoder selection, stream copy or process management.
 - **Licensing/distribution:** bundling FFmpeg, x264/x265 or other codecs, including GPL and patent considerations.
 - **Privacy/scope:** networking, uploads, analytics or synchronization.
-- **Manual GUI launch:** do not run cargo run -p easycut-app without an explicit request. Build, check, clippy, test and CLI runs on generated clips are authorized.
+- **Manual GUI launch:** do not run cargo run -p easycat-app without an explicit request. Build, check, clippy, test and CLI runs on generated clips are authorized.
 - **User files:** NEVER delete or overwrite users' videos. Test only with generated clips or copies.
 
 Changes limited to egui layout/style do not require confirmation when they do not change core calls. Existing explicit user authorization takes precedence within its scope.
@@ -41,17 +41,17 @@ Use **English** for the interface, CLI help, errors, comments, documentation, te
 
 ## Architecture
 
-The workspace retains its existing internal crate names:
+The workspace uses the easycat name for all crates:
 
 ```text
-easycut-core/ -> engine: probing, trimming, transcoding, encoder selection; no UI dependencies
-easycut-cli/  -> thin CLI calling the core
-easycut-app/  -> thin native egui UI calling the core
+easycat-core/ -> engine: probing, trimming, transcoding, encoder selection; no UI dependencies
+easycat-cli/  -> thin CLI calling the core
+easycat-app/  -> thin native egui UI calling the core
 ```
 
 ### UI-independent core
 
-- CLI and GUI call the same easycut-core functions; keep business logic out of both frontends.
+- CLI and GUI call the same easycat-core functions; keep business logic out of both frontends.
 - Core does not depend on egui or clap.
 
 ### FFmpeg boundary
@@ -101,7 +101,7 @@ Remaining areas include precise boundary-only re-encoding, additional platform h
 Every created or modified Rust file starts with its workspace-relative path:
 
 ```rust
-// File: easycut-core/src/path/to/file.rs
+// File: easycat-core/src/path/to/file.rs
 ```
 
 ## Test-driven development and checks

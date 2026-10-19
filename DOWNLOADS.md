@@ -1,4 +1,4 @@
-<p align="center"><img src="easycut-app/assets/app-icon.png" width="112" alt="easycat's pink three-eyed cat"></p>
+<p align="center"><img src="easycat-app/assets/app-icon.png" width="112" alt="easycat's pink three-eyed cat"></p>
 
 # Download easycat
 
@@ -99,7 +99,7 @@ There is no Intel or universal Mac installer yet. Developers can [build from sou
 - Video preview, volume, fullscreen and a thumbnail trim timeline.
 - An illustrated cosmic interface and the easycat mascot icon.
 
-[Public downloads and dependency sources](https://github.com/AmedeoSaadMichel/easycat-releases) · [Build and package details](docs/macos-package.md) · [Artwork and font credits](easycut-app/assets/README.md)
+[Public downloads and dependency sources](https://github.com/AmedeoSaadMichel/easycat-releases) · [Build and package details](docs/macos-package.md) · [Artwork and font credits](easycat-app/assets/README.md)
 
 ## Update notifications
 

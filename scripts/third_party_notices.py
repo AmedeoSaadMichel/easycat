@@ -75,7 +75,7 @@ def prepare_notices(destination, metadata=None):
     (destination / 'rust-index.json').write_text(json.dumps(records, indent=2) + '\n')
     shutil.copy2(ROOT / 'distribution/THIRD-PARTY-NOTICES.md', destination)
     shutil.copy2(ROOT / 'distribution/compliance/GPL-3.0.txt', destination)
-    for font in (ROOT / 'easycut-app/assets').glob('*OFL.txt'):
+    for font in (ROOT / 'easycat-app/assets').glob('*OFL.txt'):
         shutil.copy2(font, destination)
     # Registry archives may use Unix epoch timestamps, which ZIP cannot represent.
     for file in destination.rglob('*'):

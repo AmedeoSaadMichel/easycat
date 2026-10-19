@@ -18,7 +18,7 @@ Connection errors, timeouts, HTTP errors, unsupported platforms, missing HTTPS c
 
 ## Publish a new build
 
-1. Increment `BUILD` and update `VERSION` in `easycut-app/src/updates.rs` before compiling all platform packages. Build 4 is the first published update-aware release.
+1. Increment `BUILD` and update `VERSION` in `easycat-app/src/updates.rs` before compiling all platform packages. Build 4 is the first published update-aware release.
 2. Publish and verify the actual installers, corresponding third-party sources and Homebrew cask first.
 3. Update the relevant platform's `latest_build` and `version` in `distribution/updates.json`. Do not advertise a version before its release downloads work. Platforms can advance independently.
 4. Raise `minimum_build` only when older update-aware builds must be retired. Keep it positive and no greater than `latest_build`.
@@ -38,6 +38,6 @@ Requests contain no video paths, media, account identifiers or usage events. Git
 Development builds accept `--simulate-update=optional` or `--simulate-update=required`. Each opens a clearly marked local simulation of the next build against the current build. Retry remains local and the download button is disabled; public policy is never changed. These flags and their state overrides are excluded from release builds.
 
 ```sh
-cargo run -p easycut-app -- --simulate-update=optional
-cargo run -p easycut-app -- --simulate-update=required
+cargo run -p easycat-app -- --simulate-update=optional
+cargo run -p easycat-app -- --simulate-update=required
 ```

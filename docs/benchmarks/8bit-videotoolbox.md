@@ -10,7 +10,7 @@ Do not automatically enable `Backend::Chip` for 8-bit sources based on this run.
 
 Synthetic testsrc2 clips: 8 seconds, 30 fps, no audio; 8-bit H.264 and HEVC sources at 1920×1080 and 3840×2160, generated with VideoToolbox, NV12, requested bitrate 20 Mbit/s. Outputs are MP4 H.264 or HEVC at source resolution or 720p, balanced speed, Crf(23), translated by the core to -q:v 54.
 
-Commands come from easycut_core::ffmpeg::build_args. The harness forces HardwareEncode and Chip independently, without fallback. Each backend receives one warm-up and five timed runs in alternating order. Reported values are medians of whole-process wall time, including startup and file writing; source generation and probing are excluded. Every output is checked for dimensions, duration and 8-bit depth. Total: 16 combinations, 160 timed exports, 32 warm-ups.
+Commands come from easycat_core::ffmpeg::build_args. The harness forces HardwareEncode and Chip independently, without fallback. Each backend receives one warm-up and five timed runs in alternating order. Reported values are medians of whole-process wall time, including startup and file writing; source generation and probing are excluded. Every output is checked for dimensions, duration and 8-bit depth. Total: 16 combinations, 160 timed exports, 32 warm-ups.
 
 Hardware measurements ran outside the sandbox because VideoToolbox cannot create a compression session inside it. VideoToolbox software fallback was not enabled.
 
@@ -47,7 +47,7 @@ These results apply to this machine, FFmpeg build and synthetic clips. Energy co
 From the repository root on macOS with VideoToolbox access:
 
 ```sh
-cargo run --release -p easycut-core --example bench_8bit
+cargo run --release -p easycat-core --example bench_8bit
 ```
 
 The harness uses generated temporary clips, removes them after a successful run, and writes docs/benchmarks/8bit-videotoolbox.json. Copy that report before another run if you want to retain it. FFmpeg must include VideoToolbox encoders and scale_vt.

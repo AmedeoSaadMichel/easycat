@@ -126,13 +126,13 @@ def package(platform):
     if (vendor / 'lib').exists():
         shutil.copytree(vendor / 'lib', stage / 'lib', symlinks=True)
     binary = stage / ('easycat.exe' if platform == 'windows' else 'easycat-bin')
-    shutil.copy2(TARGET / 'release' / ('easycut-app' + suffix), binary)
+    shutil.copy2(TARGET / 'release' / ('easycat-app' + suffix), binary)
     if platform == 'windows':
         imports = windows_imports(binary)
         if any(name.lower().startswith(('vcruntime', 'msvcp')) for name in imports):
             raise RuntimeError(f'App requires an unbundled Visual C++ runtime: {imports}')
         (stage / 'windows-imports.json').write_text(json.dumps(imports, indent=2) + '\n')
-    shutil.copy2(ROOT / 'easycut-app/assets/app-icon.png', stage / 'easycat.png')
+    shutil.copy2(ROOT / 'easycat-app/assets/app-icon.png', stage / 'easycat.png')
     (stage / 'build-info.json').write_text(json.dumps({
         'version': VERSION,
         'platform': platform,
@@ -149,7 +149,7 @@ def package(platform):
             shutil.copy2(item, licenses / item.name)
         elif item.name in ['doc', 'licenses', 'LICENSES']:
             shutil.copytree(item, licenses / item.name)
-    for item in (ROOT / 'easycut-app/assets').glob('*OFL.txt'):
+    for item in (ROOT / 'easycat-app/assets').glob('*OFL.txt'):
         shutil.copy2(item, licenses / item.name)
     shutil.copy2(ROOT / 'scripts/ffmpeg-bundles.json', licenses / 'ffmpeg-source.json')
     if platform == 'linux':
@@ -195,7 +195,7 @@ Public distribution compliance review remains pending for this test preview.
     source = smoke / 'source.mp4'
     run([helpers / ('ffmpeg' + suffix), '-v', 'error', '-f', 'lavfi', '-i', 'testsrc2=size=160x120:rate=10', '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo', '-t', '1', '-c:v', 'libx264', '-c:a', 'aac', source], env=env)
     run([helpers / ('ffprobe' + suffix), '-v', 'error', '-show_entries', 'format=duration', source], env=env)
-    cli = TARGET / 'release' / ('easycut' + suffix)
+    cli = TARGET / 'release' / ('easycat' + suffix)
     run([cli, 'cut', source, smoke / 'trim.mp4', '--start', '0', '--end', '0.5'], env=env)
     run([cli, 'remux', source, smoke / 'remux.mkv'], env=env)
     run([cli, 'compress', source, smoke / 'compressed.mp4', '--software', '--height', '96'], env=env)
