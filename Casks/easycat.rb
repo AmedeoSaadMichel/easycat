@@ -1,8 +1,11 @@
 cask "easycat" do
-  version "0.1.0,preview.6"
-  sha256 "13b58c93a993f15a30750221b834aeae35b46eb2ceee7704ffe29216597558a6"
+  arch arm: "arm64", intel: "x86_64"
 
-  url "https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v#{version.csv.first}-#{version.csv.second}/easycat-#{version.csv.first}-macos-arm64-legal-preview.dmg"
+  version "0.1.0,preview.6"
+  sha256 arm:   "13b58c93a993f15a30750221b834aeae35b46eb2ceee7704ffe29216597558a6",
+         intel: "7cd2aa8322bd3dbcf9ba5c51f4494504f1f00922e6488b69979594ca7a25446c"
+
+  url "https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v#{version.csv.first}-#{version.csv.second}/easycat-#{version.csv.first}-macos-#{arch}-legal-preview.dmg"
   name "easycat"
   desc "Trim, compress and change video containers locally"
   homepage "https://github.com/AmedeoSaadMichel/easycat-releases"
@@ -11,7 +14,6 @@ cask "easycat" do
     skip "Preview releases are updated manually after package validation"
   end
 
-  depends_on arch: :arm64
   depends_on macos: :sequoia
 
   app "easycat.app"

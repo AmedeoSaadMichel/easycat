@@ -1,8 +1,8 @@
 # Homebrew installation
 
-The repository includes a custom Homebrew Cask for the macOS Apple Silicon preview. It installs the same self-contained DMG as the direct download, including FFmpeg, ffprobe and ffplay. Rust and a separate FFmpeg installation are not required.
+The repository includes a custom Homebrew Cask for the macOS Apple Silicon and Intel previews. It installs the same self-contained DMG as the direct download, including FFmpeg, ffprobe and ffplay. Rust and a separate FFmpeg installation are not required.
 
-Requirements: an Apple Silicon Mac, macOS 15 Sequoia or later, and Homebrew. This cask does not install Windows, Linux or Intel Mac builds.
+Requirements: an Apple Silicon or Intel Mac, macOS 15 Sequoia or later, and Homebrew. The cask selects the matching native DMG; Windows and Linux use separate downloads.
 
 ## Install
 

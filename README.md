@@ -8,9 +8,9 @@ A local Rust desktop app for trimming and compressing videos, with a cosmic nati
 
 **[Choose your operating system and download easycat →](DOWNLOADS.md)**
 
-Preview downloads are available for macOS Apple Silicon, Windows x64 and Linux x86_64. Intel Mac packages are not available yet. See the download page for requirements, installation steps and validation limits.
+Preview downloads are available for macOS Apple Silicon and Intel, Windows x64 and Linux x86_64. See the download page for requirements, installation steps and validation limits.
 
-Install the macOS Apple Silicon preview through the [project Homebrew tap](docs/homebrew.md) from the public distribution repository. See [open-source distribution](docs/open-source-distribution.md). Preparation for the official catalog is tracked in the [Homebrew submission checklist](docs/homebrew-submission.md).
+Install the macOS preview for your architecture through the [project Homebrew tap](docs/homebrew.md) from the public distribution repository. See [open-source distribution](docs/open-source-distribution.md). Preparation for the official catalog is tracked in the [Homebrew submission checklist](docs/homebrew-submission.md).
 
 ### Install with Homebrew
 

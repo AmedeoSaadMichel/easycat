@@ -96,3 +96,9 @@ Cargo defines `license` as the software license under which the package is relea
 | hexf-parse 0.2.1 | CC0-1.0 | Same verification against parse/Cargo.toml; complete CC0 text supplied |
 
 The package-specific notices and both manifests are stored in `distribution/resolved-crate-licenses`. The actual source archives remain available with the release. These are verified upstream declarations, not retroactive permissions invented by easycat. No dependency replacement or app code change was needed. Packaging rejects a changed manifest rather than silently reusing a previous resolution.
+
+## Preview 6 Intel supplement
+
+The Intel DMG is built and tested natively on macOS 15 Intel. Its separate application source archive matches the `v0.1.0-preview.6-intel` tag. The Intel dependency source archive preserves the complete macOS sources plus the native build's recipes, receipts and packaging instructions. Pinned Intel recipes differ from the preserved upstream recipes only by `env :std`, portable CPU flags, SDK header ordering, explicit dependency paths, diagnostic logs and local-tap maintenance metadata, allowing hosted build tools without upgrading unrelated dependencies.
+
+See [native Intel verification](../distribution/compliance/release-preview6-intel-verification.json) and [public download verification](../distribution/compliance/release-preview6-intel-publication-verification.json). The release's `SHA256SUMS-INTEL` covers the supplementary Intel files; the original nine preview 6 assets and their checksums are preserved. Both macOS packages require macOS 15 or later and remain ad-hoc signed, unnotarized previews.

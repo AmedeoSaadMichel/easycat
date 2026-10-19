@@ -1,0 +1,97 @@
+{
+  "status": "passed",
+  "release": "v0.1.0-preview.6",
+  "platform": "macos-x86_64",
+  "verified_on": "2026-10-19",
+  "application_build": 6,
+  "application_license": "MIT",
+  "source_commit": "a4bcdcb343878be8331fbc545eee15c7169894e8",
+  "application_source_tag": "https://github.com/AmedeoSaadMichel/easycat/tree/v0.1.0-preview.6-intel",
+  "native_build_run": {
+    "conclusion": "success",
+    "headSha": "a4bcdcb343878be8331fbc545eee15c7169894e8",
+    "url": "https://github.com/AmedeoSaadMichel/easycat/actions/runs/39286731012"
+  },
+  "validation": {
+    "architecture": "x86_64",
+    "application_build": 6,
+    "application_version": "0.1.0-preview.6",
+    "source_commit": "a4bcdcb343878be8331fbc545eee15c7169894e8",
+    "workflow_run": "39286731012",
+    "homebrew_components": [
+      "dav1d-1.5.4",
+      "ffmpeg-9.0.2_1",
+      "lame-4.0",
+      "libvmaf-3.2.1",
+      "libvpx-1.17.0",
+      "mpg123-1.33.7",
+      "openssl@4-4.0.3",
+      "opus-1.6.1",
+      "sdl2-compat-2.32.74",
+      "sdl3-3.4.18",
+      "svt-av1-4.2.0",
+      "x264-r3222",
+      "x265-4.3",
+      "xz-5.8.4"
+    ],
+    "status": "passed",
+    "app_sha256": "8bedad66e720b75e9514145124425797155fe82d68f796105ffc59dd73466c9d",
+    "cli_exports": "passed",
+    "native_gui_startup": "passed",
+    "strict_codesign": "passed",
+    "bundled_codec_tests": "see codecs/result.json",
+    "direct_ffmpeg_library_linkage": false
+  },
+  "bundled_codec_tests": {
+    "status": "passed",
+    "platform": "Darwin",
+    "codecs": [
+      {
+        "encoder": "libx264",
+        "decoder_roundtrip": "passed",
+        "audio": "aac"
+      },
+      {
+        "encoder": "libx265",
+        "decoder_roundtrip": "passed",
+        "audio": "aac"
+      },
+      {
+        "encoder": "libvpx-vp9",
+        "decoder_roundtrip": "passed",
+        "audio": "libopus"
+      },
+      {
+        "encoder": "libsvtav1",
+        "decoder_roundtrip": "passed",
+        "audio": "aac"
+      }
+    ],
+    "hevc_10bit": "passed",
+    "lossless_remux": "passed",
+    "thumbnail": "passed",
+    "audio_playback": "passed",
+    "tool_sha256": {
+      "ffmpeg": "f8131be5a7316324e7fe238ba75b137182f46a19188da389de303e5751b4b71b",
+      "ffprobe": "897ee7287caf5b1e0de294024b320612e3132cf0f0f29f5fbafc9adfc5b425c8",
+      "ffplay": "08e03f16f2e89bfa7cc53201c005f39d8e2c54582845fed9c1ff8dd9c4fa74d5"
+    },
+    "scope": "Actual distributed executable codec/export tests; headless audio, not interactive desktop playback"
+  },
+  "dependency_sources": "easycat-0.1.0-macos-intel-third-party-source.tar.gz",
+  "dependency_source_scope": "Exact component versions, source URLs and source SHA-256/git revisions verified against preserved sources. Intel Homebrew formula files, installation receipts, build metadata and packaging workflow are included alongside the complete existing macOS dependency sources.",
+  "rust_sources": "rust-third-party-sources.tar.gz (existing preview 6 asset, unchanged dependencies)",
+  "dmg_sha256": "7cd2aa8322bd3dbcf9ba5c51f4494504f1f00922e6488b69979594ca7a25446c",
+  "minimum_macos": "15.0",
+  "signature": "ad-hoc, deep/strict verified on native Intel",
+  "dmg_integrity": "hdiutil verified on native Intel",
+  "update_policy": {
+    "latest_build": 6,
+    "minimum_build": 6
+  },
+  "preview_limits": [
+    "macOS 15+ Intel x86_64; ad-hoc signed, not notarized",
+    "Native packaged GUI startup and generated-media checks passed; exhaustive interactive desktop certification is outside scope"
+  ],
+  "scope": "Supplementary Intel assets for preview 6. Existing Apple Silicon, Windows, Linux and source assets are not replaced."
+}

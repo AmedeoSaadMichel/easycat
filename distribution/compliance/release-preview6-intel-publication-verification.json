@@ -1,0 +1,39 @@
+{
+  "release": "https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.6",
+  "verified_on": "2026-10-19",
+  "platform": "macos-x86_64",
+  "all_uploaded_checksums_match": true,
+  "existing_preview6_assets_unchanged": true,
+  "assets": [
+    {
+      "name": "INTEL-RELEASE-VERIFICATION.json",
+      "sha256": "8a6120ca844d2a77f3c4a30a2843eb3d9736459ca82bc6b738b73a15488b9117",
+      "bytes": 3610,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-macos-intel-third-party-source.tar.gz",
+      "sha256": "8674023d8fae1ef24a3e90b3aa30c422a461c2cc064c628c4ed552cd32611aae",
+      "bytes": 142186299,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-macos-x86_64-legal-preview.dmg",
+      "sha256": "7cd2aa8322bd3dbcf9ba5c51f4494504f1f00922e6488b69979594ca7a25446c",
+      "bytes": 54830922,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-preview.6-intel-source.tar.gz",
+      "sha256": "e98ff4371ed5734270f2b91b6c74120225eda1b953f591dacad7d209c1012d01",
+      "bytes": 10763943,
+      "anonymous_download": true
+    },
+    {
+      "name": "SHA256SUMS-INTEL",
+      "sha256": "8a2a91df04de8356107333faee7d5454b94291812c438a2a370f9b54386b24fe",
+      "bytes": 437,
+      "anonymous_download": true
+    }
+  ]
+}
