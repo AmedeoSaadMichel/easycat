@@ -43,9 +43,20 @@ def tools():
     tap.mkdir(parents=True, exist_ok=True)
     for recipe in (ROOT / 'distribution/compliance/intel-formulae').glob('*.rb'):
         shutil.copy2(recipe, tap / recipe.name)
+    # Load every recipe before spending time compiling any of them.
+    formulae = json.loads(subprocess.check_output(
+        ['brew', 'info', '--json=v2', *('easycat/intel/' + name for name in COMPONENTS)],
+        env=environment(), text=True))['formulae']
+    for formula in formulae:
+        version = formula['versions']['stable']
+        if formula['revision']:
+            version += '_' + str(formula['revision'])
+        if COMPONENTS[formula['name']] != version:
+            raise RuntimeError(f"Unexpected pinned version for {formula['name']}: {version}")
+    print('Validated all pinned Intel formula definitions', flush=True)
     run([sys.executable, '-m', 'venv', TOOLS])
     run([TOOLS / 'bin/python', '-m', 'pip', 'install', 'meson==1.12.1'])
-    # Superenv resolves declared build tools through opt; Meson runs on hosted Python.
+    # Homebrew helpers also resolve build tools through opt; Meson uses hosted Python.
     meson_opt = PREFIX / 'opt/meson'
     if meson_opt.is_symlink():
         meson_opt.unlink()

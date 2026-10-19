@@ -39,7 +39,6 @@ class X264 < Formula
     end
   end
 
-  no_autobump! because: :incompatible_version_format
 
   on_macos do
     depends_on "gcc" if DevelopmentTools.clang_build_version <= 902
