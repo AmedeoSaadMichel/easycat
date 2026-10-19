@@ -1,0 +1,71 @@
+name: macOS Intel package
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify native Intel runner and install media tools
+        run: |
+          test "$(uname -m)" = x86_64
+          brew update
+          brew install ffmpeg pkg-config
+          brew upgrade ffmpeg
+      - name: Rust toolchain
+        run: rustup update stable --no-self-update
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/debug
+            target/release
+          key: macos-intel-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            macos-intel-${{ hashFiles('Cargo.lock') }}-
+      - name: Check format, lint and native tests
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --locked -- -D warnings
+          cargo test --workspace --locked
+          python -m unittest discover -s scripts -p 'test_*.py'
+      - name: Build release workspace
+        run: cargo build --workspace --release --locked
+      - name: Package and verify Intel DMG
+        run: |
+          python scripts/package_macos.py
+          python scripts/verify_distributed_tools.py --helpers target/macos-package/easycat.app/Contents/Helpers --libraries target/macos-package/easycat.app/Contents/Frameworks --output target/macos-verification/codecs
+          python scripts/verify_macos_package.py
+          git archive --format=tar.gz --prefix=easycat-0.1.0-preview.6-intel/ --output=dist/easycat-0.1.0-preview.6-intel-source.tar.gz HEAD
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: easycat-macos-intel
+          path: |
+            dist/*
+            target/macos-verification
+            target/macos-package/easycat.app/Contents/Resources/build-info.json
+            target/macos-package/easycat.app/Contents/Resources/dependency-manifest.json
+            target/macos-package/easycat.app/Contents/Resources/Licenses/*/formula/*.rb
+            target/macos-package/easycat.app/Contents/Resources/Licenses/*/INSTALL_RECEIPT.json
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/debug
+            target/release
+          key: macos-intel-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}

@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 import prepare_public_distribution as public_distribution
+from package_macos import check_binary_architecture
 
 from collect_distribution_sources import collect_crates, collect_mac
 from third_party_notices import prepare_notices
@@ -17,6 +18,16 @@ from assemble_release_verification import require_passed
 
 
 class DistributionTests(unittest.TestCase):
+    def test_intel_bundle_rejects_arm_only_binary(self):
+        with patch('package_macos.run', return_value='arm64\n'):
+            with self.assertRaisesRegex(RuntimeError, 'Wrong architecture'):
+                check_binary_architecture(Path('ffmpeg'), 'x86_64')
+
+    def test_intel_bundle_accepts_native_or_universal_binary(self):
+        for architectures in ['x86_64\n', 'x86_64 arm64\n']:
+            with patch('package_macos.run', return_value=architectures):
+                check_binary_architecture(Path('ffmpeg'), 'x86_64')
+
     def test_notices_exclude_workspace_source_and_symlinks(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

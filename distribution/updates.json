@@ -15,6 +15,11 @@
       "latest_build": 6,
       "minimum_build": 6,
       "version": "0.1.0-preview.6"
+    },
+    "macos-x86_64": {
+      "latest_build": 6,
+      "minimum_build": 6,
+      "version": "0.1.0-preview.6"
     }
   }
 }

@@ -38,6 +38,7 @@ struct Manifest {
 fn platform() -> &'static str {
     match (std::env::consts::OS, std::env::consts::ARCH) {
         ("macos", "aarch64") => "macos-arm64",
+        ("macos", "x86_64") => "macos-x86_64",
         ("windows", "x86_64") => "windows-x64",
         ("linux", "x86_64") => "linux-x86_64",
         _ => "unsupported",
@@ -231,7 +232,7 @@ mod tests {
     #[test]
     fn maintained_public_policy_is_valid_for_all_supported_platforms() {
         let bytes = include_bytes!("../../distribution/updates.json");
-        for platform in ["macos-arm64", "windows-x64", "linux-x86_64"] {
+        for platform in ["macos-arm64", "macos-x86_64", "windows-x64", "linux-x86_64"] {
             let release = parse(bytes, platform).unwrap();
             assert!(release.latest_build >= release.minimum_build);
         }

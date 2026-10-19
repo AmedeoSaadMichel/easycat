@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import plistlib
+import platform
 import re
 import shutil
 import subprocess
@@ -38,7 +39,20 @@ def system(path):
     return path.startswith(('/System/', '/usr/lib/'))
 
 
+def package_architecture(machine=None):
+    machine = machine or platform.machine()
+    if machine not in ('arm64', 'x86_64'):
+        raise RuntimeError(f'Unsupported macOS architecture: {machine}')
+    return machine
+
+
+def check_binary_architecture(path, architecture):
+    if architecture not in run('lipo', '-archs', path).split():
+        raise RuntimeError(f'Wrong architecture in {path}; expected {architecture}')
+
+
 def main():
+    architecture = package_architecture()
     if APP.exists():
         raise SystemExit(f'Remove or rename the previous generated staging bundle first: {APP}')
     for directory in [FRAMEWORKS, RESOURCES, HELPERS, MACOS, OUT]:
@@ -52,7 +66,8 @@ def main():
         shutil.copy2(source, dest)
         queue.append((source, dest))
     # SDL2 compatibility loads SDL3 dynamically rather than through a Mach-O link.
-    sdl3 = Path('/opt/homebrew/opt/sdl3/lib/libSDL3.0.dylib')
+    brew_prefix = Path(run('brew', '--prefix').strip())
+    sdl3 = brew_prefix / 'opt/sdl3/lib/libSDL3.0.dylib'
     if sdl3.exists():
         queue.append((sdl3.resolve(), FRAMEWORKS / sdl3.name))
         shutil.copy2(sdl3, FRAMEWORKS / sdl3.name)
@@ -66,6 +81,7 @@ def main():
                 raise RuntimeError(f'Conflicting library names: {source}, {known[dest.name]}')
             continue
         known[dest.name] = source
+        check_binary_architecture(source, architecture)
         dest.chmod(0o755)
         build = run('otool', '-l', source)
         for version in re.findall(r'\bminos\s+(\d+(?:\.\d+)+)', build):
@@ -105,6 +121,15 @@ def main():
             shutil.copytree(formula, destination / 'formula')
     for item in (ROOT / 'easycat-app/assets').glob('*OFL.txt'):
         shutil.copy2(item, licenses / item.name)
+    update_source = (ROOT / 'easycat-app/src/updates.rs').read_text()
+    build = int(re.search(r'pub const BUILD: u64 = (\d+);', update_source).group(1))
+    app_version = re.search(r'pub const VERSION: &str = "([^"]+)";', update_source).group(1)
+    (RESOURCES / 'build-info.json').write_text(json.dumps({
+        'architecture': architecture, 'application_build': build, 'application_version': app_version,
+        'source_commit': run('git', 'rev-parse', 'HEAD').strip(),
+        'workflow_run': os.environ.get('GITHUB_RUN_ID'),
+        'homebrew_components': sorted(package.parent.name + '-' + package.name for package in packages),
+    }, indent=2) + '\n')
     (RESOURCES / 'dependency-manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     if (FRAMEWORKS / 'libSDL3.0.dylib').exists():
         (FRAMEWORKS / 'libSDL3.dylib').symlink_to('libSDL3.0.dylib')
@@ -124,7 +149,7 @@ exec "$contents/MacOS/easycat-bin" "$@"
             run('sips', '-z', size * density, size * density, icon_source,
                 '--out', iconset / f'icon_{size}x{size}{suffix}.png')
     run('iconutil', '-c', 'icns', iconset, '-o', RESOURCES / 'easycat.icns')
-    info = {'CFBundleName': 'easycat', 'CFBundleDisplayName': 'easycat', 'CFBundleIdentifier': 'com.easycat.desktop', 'CFBundleExecutable': 'easycat', 'CFBundleIconFile': 'easycat.icns', 'CFBundlePackageType': 'APPL', 'CFBundleShortVersionString': VERSION, 'CFBundleVersion': VERSION, 'LSMinimumSystemVersion': '.'.join(map(str, minimum)), 'NSHighResolutionCapable': True, 'NSPrincipalClass': 'NSApplication', 'NSSupportsAutomaticGraphicsSwitching': True}
+    info = {'CFBundleName': 'easycat', 'CFBundleDisplayName': 'easycat', 'CFBundleIdentifier': 'com.easycat.desktop', 'CFBundleExecutable': 'easycat', 'CFBundleIconFile': 'easycat.icns', 'CFBundlePackageType': 'APPL', 'CFBundleShortVersionString': VERSION, 'CFBundleVersion': str(build), 'LSMinimumSystemVersion': '.'.join(map(str, minimum)), 'NSHighResolutionCapable': True, 'NSPrincipalClass': 'NSApplication', 'NSSupportsAutomaticGraphicsSwitching': True}
     with (CONTENTS / 'Info.plist').open('wb') as stream:
         plistlib.dump(info, stream)
     for _, dest in queue:
@@ -136,7 +161,7 @@ exec "$contents/MacOS/easycat-bin" "$@"
     run('codesign', '--force', '--sign', '-', APP)
     run('codesign', '--verify', '--deep', '--strict', APP)
     (STAGE / 'Applications').symlink_to('/Applications')
-    (STAGE / 'Read me.txt').write_text(f'''easycat {VERSION} — Apple Silicon
+    (STAGE / 'Read me.txt').write_text(f'''easycat {app_version} — {'Apple Silicon' if architecture == 'arm64' else 'Intel x86_64'}
 
 Drag easycat to Applications to install.
 Requires macOS {info['LSMinimumSystemVersion']} or later.
@@ -146,14 +171,14 @@ Third-party licenses and build manifests are inside easycat.app/Contents/Resourc
 This image is a local test artifact; public release compliance and notarization
 have not been completed.
 ''')
-    dmg = OUT / f'easycat-{VERSION}-macos-arm64.dmg'
+    dmg = OUT / f'easycat-{VERSION}-macos-{architecture}.dmg'
     if dmg.exists():
         raise RuntimeError(f'Output already exists: {dmg}')
     run('hdiutil', 'create', '-volname', 'easycat', '-srcfolder', STAGE, '-ov', '-format', 'UDZO', dmg)
     run('hdiutil', 'verify', dmg)
     checksum = hashlib.sha256(dmg.read_bytes()).hexdigest()
     dmg.with_suffix('.dmg.sha256').write_text(f'{checksum}  {dmg.name}\n')
-    print(json.dumps({'dmg': str(dmg), 'bytes': dmg.stat().st_size, 'minimum_macos': info['LSMinimumSystemVersion'], 'libraries': len(known), 'sha256': checksum}, indent=2))
+    print(json.dumps({'dmg': str(dmg), 'bytes': dmg.stat().st_size, 'architecture': architecture, 'application_build': build, 'minimum_macos': info['LSMinimumSystemVersion'], 'libraries': len(known), 'sha256': checksum}, indent=2))
 
 
 if __name__ == '__main__':
