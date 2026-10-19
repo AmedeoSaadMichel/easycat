@@ -6,7 +6,7 @@ permissions:
 jobs:
   build:
     runs-on: macos-15-intel
-    timeout-minutes: 60
+    timeout-minutes: 180
     env:
       MACOSX_DEPLOYMENT_TARGET: '15.0'
       HOMEBREW_NO_AUTO_UPDATE: '1'
@@ -15,12 +15,34 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify native Intel runner and install media tools
-        run: |
-          test "$(uname -m)" = x86_64
-          brew update
-          brew install ffmpeg pkg-config
-          brew upgrade ffmpeg
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            /usr/local/Cellar/dav1d
+            /usr/local/Cellar/ffmpeg
+            /usr/local/Cellar/lame
+            /usr/local/Cellar/libvmaf
+            /usr/local/Cellar/libvpx
+            /usr/local/Cellar/mpg123
+            /usr/local/Cellar/openssl@4
+            /usr/local/Cellar/opus
+            /usr/local/Cellar/sdl2-compat
+            /usr/local/Cellar/sdl3
+            /usr/local/Cellar/svt-av1
+            /usr/local/Cellar/x264
+            /usr/local/Cellar/x265
+            /usr/local/Cellar/xz
+          key: intel-media-v1-${{ hashFiles('distribution/compliance/macos-sources.json') }}-${{ github.run_id }}
+          restore-keys: |
+            intel-media-v1-${{ hashFiles('distribution/compliance/macos-sources.json') }}-
+      - name: Reuse installed Intel build tools
+        run: python scripts/prepare_macos_intel_media.py --tools
+      - name: Install pinned media foundation
+        run: python scripts/prepare_macos_intel_media.py openssl@4 xz mpg123 lame dav1d libvmaf
+      - name: Install pinned codecs and playback
+        run: python scripts/prepare_macos_intel_media.py libvpx opus sdl3 sdl2-compat svt-av1 x264 x265
+      - name: Build pinned FFmpeg
+        run: python scripts/prepare_macos_intel_media.py ffmpeg
       - name: Rust toolchain
         run: rustup update stable --no-self-update
       - uses: actions/cache/restore@v4
@@ -69,3 +91,22 @@ jobs:
             target/debug
             target/release
           key: macos-intel-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            /usr/local/Cellar/dav1d
+            /usr/local/Cellar/ffmpeg
+            /usr/local/Cellar/lame
+            /usr/local/Cellar/libvmaf
+            /usr/local/Cellar/libvpx
+            /usr/local/Cellar/mpg123
+            /usr/local/Cellar/openssl@4
+            /usr/local/Cellar/opus
+            /usr/local/Cellar/sdl2-compat
+            /usr/local/Cellar/sdl3
+            /usr/local/Cellar/svt-av1
+            /usr/local/Cellar/x264
+            /usr/local/Cellar/x265
+            /usr/local/Cellar/xz
+          key: intel-media-v1-${{ hashFiles('distribution/compliance/macos-sources.json') }}-${{ github.run_id }}
