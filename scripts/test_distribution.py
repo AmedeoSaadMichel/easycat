@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import prepare_macos_intel_media as intel_media
 import prepare_public_distribution as public_distribution
 from package_macos import check_binary_architecture
 from prepare_macos_intel_media import parse_args as parse_intel_media_args
@@ -19,6 +20,40 @@ from assemble_release_verification import require_passed
 
 
 class DistributionTests(unittest.TestCase):
+    def test_cached_intel_package_replaces_old_global_links_before_relinking(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            old, new = root / 'Cellar/xz/1', root / 'Cellar/xz/2'
+            old.mkdir(parents=True)
+            new.mkdir(parents=True)
+            (new / 'INSTALL_RECEIPT.json').write_text('{}')
+            opt, linked = root / 'opt/xz', root / 'var/homebrew/linked/xz'
+            opt.parent.mkdir(parents=True)
+            linked.parent.mkdir(parents=True)
+            opt.symlink_to(old)
+            linked.symlink_to(old)
+            actions = []
+
+            def brew(args, **kwargs):
+                actions.append(args[1])
+                if args[1] == 'unlink':
+                    self.assertEqual(opt.resolve(), old)
+                    linked.unlink()
+                elif args[1] == 'link':
+                    self.assertEqual(opt.resolve(), new)
+                    linked.symlink_to(new)
+                else:
+                    self.fail(f'Unexpected command: {args}')
+
+            with patch.object(intel_media, 'PREFIX', root), \
+                    patch.object(intel_media, 'COMPONENTS', {'xz': '2'}), \
+                    patch.object(intel_media, 'run', side_effect=brew), \
+                    patch.dict('os.environ', {'GITHUB_ACTIONS': 'true'}):
+                intel_media.install('xz')
+            self.assertEqual(actions, ['unlink', 'link'])
+            self.assertEqual(opt.resolve(), new)
+            self.assertEqual(linked.resolve(), new)
+
     def test_intel_build_tool_setup_accepts_no_runtime_packages(self):
         args = parse_intel_media_args(["--tools"])
         self.assertTrue(args.tools)

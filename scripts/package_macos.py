@@ -166,10 +166,9 @@ exec "$contents/MacOS/easycat-bin" "$@"
 Drag easycat to Applications to install.
 Requires macOS {info['LSMinimumSystemVersion']} or later.
 FFmpeg, ffprobe, ffplay and their linked libraries are included.
-This local test build is ad-hoc signed, without Developer ID notarization.
+This preview build is ad-hoc signed, without Developer ID notarization.
 Third-party licenses and build manifests are inside easycat.app/Contents/Resources.
-This image is a local test artifact; public release compliance and notarization
-have not been completed.
+Corresponding source archives accompany the published preview downloads.
 ''')
     dmg = OUT / f'easycat-{VERSION}-macos-{architecture}.dmg'
     if dmg.exists():

@@ -69,23 +69,33 @@ def tools():
 
 
 def install(name):
+    if os.environ.get('GITHUB_ACTIONS') != 'true':
+        raise RuntimeError('Intel media provisioning is restricted to disposable CI runners')
     version = COMPONENTS[name]
     keg = PREFIX / 'Cellar' / name / version
     env = environment()
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
         # Only the disposable CI runner may replace its preinstalled core formula.
         if (PREFIX / 'Cellar' / name).exists():
-            if os.environ.get('GITHUB_ACTIONS') != 'true':
-                raise RuntimeError('Replacing preinstalled formulae is restricted to CI')
             run(['brew', 'uninstall', '--force', '--ignore-dependencies', name], env=env)
         run(['brew', 'install', '--ignore-dependencies', 'easycat/intel/' + name], env=env)
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
         raise RuntimeError(f'Expected pinned media package is missing: {keg}')
     opt = PREFIX / 'opt' / name
+    linked = PREFIX / 'var/homebrew/linked' / name
+    if name != 'openssl@4' and linked.is_symlink() and linked.resolve() != keg:
+        old_keg = linked.resolve(strict=True)
+        # brew unlink selects opt first: restore the old opt before unlinking it.
+        if opt.is_symlink():
+            opt.unlink()
+        opt.symlink_to(old_keg)
+        run(['brew', 'unlink', name], env=env)
     if opt.is_symlink():
         opt.unlink()
     opt.symlink_to(keg)
-    # Resolve pinned tools through opt/bin without disturbing runner-wide links.
+    if name != 'openssl@4' and (not linked.is_symlink() or linked.resolve() != keg):
+        run(['brew', 'link', '--overwrite', name], env=env)
+    # Direct linker probes as well as pkg-config must select the pinned keg.
     print('Verified installed version:', name, version, flush=True)
 
 
