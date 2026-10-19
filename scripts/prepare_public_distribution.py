@@ -52,7 +52,7 @@ def main():
     args = parser.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', args.repository):
         parser.error('Repository must be OWNER/REPO')
-    if args.repository.lower() == 'amedeosaadmichel/easycut':
+    if args.repository.lower() in {'amedeosaadmichel/easycut', 'amedeosaadmichel/easycat'}:
         parser.error('Use the separate distribution repository for download assets')
     if digest(ROOT / 'Cargo.lock') != 'd6d8c3585a1c883c260871d0627316ae607822a68c7dcf2457fe3307fcb69d87':
         parser.error('The original preview dependency lock changed; re-audit the actual binary dependencies')
@@ -156,7 +156,7 @@ def main():
     (output / 'README.md').write_text(f'''# easycat downloads
 
 Cut. Transform. Meow. Local video trimming, compression and container conversion.
-This repository distributes binaries and third-party source materials only. The easycat application source is licensed under MIT and maintained at [AmedeoSaadMichel/easycut](https://github.com/AmedeoSaadMichel/easycut).
+This repository distributes binaries and third-party source materials only. The easycat application source is licensed under MIT and maintained at [AmedeoSaadMichel/easycat](https://github.com/AmedeoSaadMichel/easycat).
 
 ## Install
 

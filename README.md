@@ -57,7 +57,7 @@ Copy/remux estimates remain proportional to the source size; variable bitrate an
 
 ## License
 
-easycat is licensed under the [MIT License](LICENSE). The application source repository is [AmedeoSaadMichel/easycut](https://github.com/AmedeoSaadMichel/easycut). Third-party components retain their own licenses; see [third-party notices](distribution/THIRD-PARTY-NOTICES.md) and the [distribution guide](docs/open-source-distribution.md).
+easycat is licensed under the [MIT License](LICENSE). The application source repository is [AmedeoSaadMichel/easycat](https://github.com/AmedeoSaadMichel/easycat). Third-party components retain their own licenses; see [third-party notices](distribution/THIRD-PARTY-NOTICES.md) and the [distribution guide](docs/open-source-distribution.md).
 
 ## Development
 

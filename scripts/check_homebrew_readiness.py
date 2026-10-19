@@ -16,7 +16,7 @@ def command(*args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--repo', default='AmedeoSaadMichel/easycut')
+    parser.add_argument('--repo', default='AmedeoSaadMichel/easycat')
     parser.add_argument('--tag', default='v0.1.0-preview.1')
     parser.add_argument('--dmg', type=Path)
     args = parser.parse_args()
