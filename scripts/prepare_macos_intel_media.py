@@ -43,10 +43,14 @@ def tools():
     tap.mkdir(parents=True, exist_ok=True)
     for recipe in (ROOT / 'distribution/compliance/intel-formulae').glob('*.rb'):
         shutil.copy2(recipe, tap / recipe.name)
+    # Trust only these checked-in recipes on the disposable CI runner.
+    run(['brew', 'trust', '--formula', *('easycat/intel/' + name for name in COMPONENTS)])
     # Load every recipe before spending time compiling any of them.
     formulae = json.loads(subprocess.check_output(
         ['brew', 'info', '--json=v2', *('easycat/intel/' + name for name in COMPONENTS)],
         env=environment(), text=True))['formulae']
+    if {formula['name'] for formula in formulae} != set(COMPONENTS):
+        raise RuntimeError('Pinned Intel formula preflight returned an incomplete set')
     for formula in formulae:
         version = formula['versions']['stable']
         if formula['revision']:
