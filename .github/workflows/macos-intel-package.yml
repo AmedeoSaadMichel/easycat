@@ -39,8 +39,20 @@ jobs:
         run: python scripts/prepare_macos_intel_media.py --tools
       - name: Install pinned media foundation
         run: python scripts/prepare_macos_intel_media.py openssl@4 xz mpg123 lame dav1d libvmaf
-      - name: Install pinned codecs and playback
-        run: python scripts/prepare_macos_intel_media.py libvpx opus sdl3 sdl2-compat svt-av1 x264 x265
+      - name: Build pinned libvpx
+        run: python scripts/prepare_macos_intel_media.py libvpx
+      - name: Build pinned opus
+        run: python scripts/prepare_macos_intel_media.py opus
+      - name: Build pinned sdl3
+        run: python scripts/prepare_macos_intel_media.py sdl3
+      - name: Build pinned sdl2-compat
+        run: python scripts/prepare_macos_intel_media.py sdl2-compat
+      - name: Build pinned svt-av1
+        run: python scripts/prepare_macos_intel_media.py svt-av1
+      - name: Build pinned x264
+        run: python scripts/prepare_macos_intel_media.py x264
+      - name: Build pinned x265
+        run: python scripts/prepare_macos_intel_media.py x265
       - name: Build pinned FFmpeg
         run: python scripts/prepare_macos_intel_media.py ffmpeg
       - name: Rust toolchain
