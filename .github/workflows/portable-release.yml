@@ -2,6 +2,10 @@ name: Windows and Linux packages
 on:
   workflow_dispatch:
     inputs:
+      publish_release:
+        description: Upload packages to the existing release (disable for verification only)
+        type: boolean
+        default: false
       release_tag:
         description: Existing preview release to receive the packages
         required: true
@@ -84,6 +88,7 @@ jobs:
             target/release
           key: native-v2-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
   publish:
+    if: inputs.publish_release
     needs: build
     runs-on: ubuntu-22.04
     permissions:

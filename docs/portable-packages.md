@@ -18,7 +18,13 @@ No user videos or application data are uploaded by easycat. Build-time downloads
 
 ## Release publication
 
-The publish job runs only after all selected native build jobs pass and uploads archives/checksums to the selected existing prerelease. The workflow has read-only repository access during building; only the publish job has contents-write permission. UI preview artifacts are kept separately and are not uploaded as application downloads.
+By default, the workflow verifies builds and packaging without changing any release. Archives/checksums remain available as workflow artifacts. Set the boolean `publish_release` input to `true` only when intentionally publishing to the selected existing prerelease; the publish job runs after all selected native build jobs pass.
+
+To verify both platforms without publishing:
+
+```sh
+gh workflow run portable-release.yml --repo AmedeoSaadMichel/easycat --ref main -f platform=both -f publish_release=false
+``` The workflow has read-only repository access during building; only the publish job has contents-write permission. UI preview artifacts are kept separately and are not uploaded as application downloads.
 
 These builds are unsigned test previews. CI validates compilation and engine workflows, and Xvfb validates Linux startup/rendering; it does not replace hands-on testing on Windows 10/11 or a range of Linux desktops.
 
