@@ -22,7 +22,8 @@ def run(args, **kwargs):
 
 def environment():
     env = os.environ.copy()
-    env['PATH'] = str(TOOLS / 'bin') + os.pathsep + env['PATH']
+    bins = [TOOLS / 'bin', *(PREFIX / 'opt' / name / 'bin' for name in COMPONENTS)]
+    env['PATH'] = os.pathsep.join(map(str, bins)) + os.pathsep + env['PATH']
     env['HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK'] = '1'
     env['HOMEBREW_NO_INSTALL_CLEANUP'] = '1'
     env.pop('HOMEBREW_NO_INSTALL_UPGRADE', None)
@@ -54,7 +55,8 @@ def tools():
     (output / 'build-tools.json').write_text(json.dumps(versions, indent=2) + '\n')
     if os.environ.get('GITHUB_PATH'):
         with open(os.environ['GITHUB_PATH'], 'a') as f:
-            f.write(str(TOOLS / 'bin') + '\n')
+            for directory in [TOOLS / 'bin', *(PREFIX / 'opt' / name / 'bin' for name in COMPONENTS)]:
+                f.write(str(directory) + '\n')
         with open(os.environ['GITHUB_ENV'], 'a') as f:
             for key in ('PKG_CONFIG_PATH', 'PKG_CONFIG_LIBDIR'):
                 f.write(key + '=' + env[key] + '\n')
@@ -73,9 +75,7 @@ def install(name):
     if opt.is_symlink():
         opt.unlink()
     opt.symlink_to(keg)
-    if name != 'openssl@4':
-        run(['brew', 'unlink', name], env=env)
-        run(['brew', 'link', '--overwrite', name], env=env)
+    # Resolve pinned tools through opt/bin without disturbing runner-wide links.
     print('Verified installed version:', name, version, flush=True)
 
 
