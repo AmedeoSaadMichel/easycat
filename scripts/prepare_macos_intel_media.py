@@ -38,6 +38,7 @@ def environment():
 def tools():
     assert os.uname().machine == 'x86_64'
     run(['brew', 'update'])
+    run(['brew', 'install', 'nasm'], env=environment())
     tap = PREFIX / 'Homebrew/Library/Taps/easycat/homebrew-intel/Formula'
     tap.mkdir(parents=True, exist_ok=True)
     for recipe in (ROOT / 'distribution/compliance/intel-formulae').glob('*.rb'):
@@ -52,7 +53,7 @@ def tools():
         meson_opt.symlink_to(TOOLS)
     env = environment()
     versions = {}
-    for tool in ('cmake', 'ninja', 'pkg-config', 'meson'):
+    for tool in ('cmake', 'ninja', 'pkg-config', 'meson', 'nasm'):
         versions[tool] = subprocess.check_output([tool, '--version'], env=env, text=True).strip()
         print(tool, versions[tool], flush=True)
     output = ROOT / 'target/macos-verification'
