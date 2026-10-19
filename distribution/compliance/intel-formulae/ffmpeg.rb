@@ -78,11 +78,21 @@ class Ffmpeg < Formula
       --enable-openssl
     ]
 
+    # Standard SDK builds must find pinned headers as well as pkg-config metadata.
+    runtime_deps = deps.reject(&:build?)
+    args << "--extra-cflags=#{runtime_deps.map { |dep| "-I#{HOMEBREW_PREFIX}/opt/#{dep.name}/include" }.join(" ")}"
+    args << "--extra-ldflags=#{runtime_deps.map { |dep| "-L#{HOMEBREW_PREFIX}/opt/#{dep.name}/lib" }.join(" ")}"
+
     # Needs corefoundation, coremedia, corevideo
     args += %w[--enable-videotoolbox --enable-audiotoolbox] if OS.mac?
     args << "--enable-neon" if Hardware::CPU.arm?
 
-    system "./configure", *args
+    begin
+      system "./configure", *args
+    ensure
+      config_log = buildpath/"ffbuild/config.log"
+      cp config_log, logs/"ffmpeg-config.log" if config_log.exist?
+    end
     system "make", "install"
 
     # Build and install additional FFmpeg tools
