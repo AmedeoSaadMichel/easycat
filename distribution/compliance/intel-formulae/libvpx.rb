@@ -18,7 +18,7 @@ class Libvpx < Formula
   deny_network_access!
 
   def install
-    ENV.runtime_cpu_detection
+    ENV.remove_from_cflags(/-m(?:arch|cpu)=\S+/) # Preserve runtime CPU detection with std env.
     # NOTE: `libvpx` will fail to build on new macOS versions before the
     # `configure` and `build/make/configure.sh` files are updated to support
     # the new target (e.g., `arm64-darwin24-gcc` for macOS 15). We [temporarily]

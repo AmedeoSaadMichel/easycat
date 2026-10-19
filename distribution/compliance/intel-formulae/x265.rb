@@ -18,7 +18,7 @@ class X265 < Formula
   allow_network_access! :test
 
   def install
-    ENV.runtime_cpu_detection
+    ENV.remove_from_cflags(/-m(?:arch|cpu)=\S+/) # Preserve runtime CPU detection with std env.
     # Build based off the script at ./build/linux/multilib.sh
     args = %W[
       -DLINKED_10BIT=ON

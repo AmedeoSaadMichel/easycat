@@ -23,7 +23,7 @@ class SvtAv1 < Formula
     # Features are enabled based on compiler support, and then the appropriate
     # implementations are chosen at runtime.
     # See https://gitlab.com/AOMediaCodec/SVT-AV1/-/blob/master/Source/Lib/Codec/common_dsp_rtcd.c
-    ENV.runtime_cpu_detection
+    ENV.remove_from_cflags(/-m(?:arch|cpu)=\S+/) # Preserve runtime CPU detection with std env.
 
     system "cmake", "-S", ".", "-B", "build", "-DCMAKE_INSTALL_RPATH=#{rpath}", *std_cmake_args
     system "cmake", "--build", "build"
