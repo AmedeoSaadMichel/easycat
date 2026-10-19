@@ -22,6 +22,9 @@ def run(args, **kwargs):
 def environment():
     env = os.environ.copy()
     env['PATH'] = str(TOOLS / 'bin') + os.pathsep + env['PATH']
+    env['HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK'] = '1'
+    env['HOMEBREW_NO_INSTALL_CLEANUP'] = '1'
+    env.pop('HOMEBREW_NO_INSTALL_UPGRADE', None)
     pkg = [str(PREFIX / 'opt' / name / suffix) for name in COMPONENTS
            for suffix in ('lib/pkgconfig', 'share/pkgconfig')]
     env['PKG_CONFIG_PATH'] = os.pathsep.join(pkg)
@@ -34,9 +37,20 @@ def tools():
     run(['brew', 'update'])
     run([sys.executable, '-m', 'venv', TOOLS])
     run([TOOLS / 'bin/python', '-m', 'pip', 'install', 'meson==1.12.1'])
+    # Superenv resolves declared build tools through opt; Meson runs on hosted Python.
+    meson_opt = PREFIX / 'opt/meson'
+    if meson_opt.is_symlink():
+        meson_opt.unlink()
+    if not meson_opt.exists():
+        meson_opt.symlink_to(TOOLS)
     env = environment()
+    versions = {}
     for tool in ('cmake', 'ninja', 'pkg-config', 'meson'):
-        run([tool, '--version'], env=env)
+        versions[tool] = subprocess.check_output([tool, '--version'], env=env, text=True).strip()
+        print(tool, versions[tool], flush=True)
+    output = ROOT / 'target/macos-verification'
+    output.mkdir(parents=True, exist_ok=True)
+    (output / 'build-tools.json').write_text(json.dumps(versions, indent=2) + '\n')
     if os.environ.get('GITHUB_PATH'):
         with open(os.environ['GITHUB_PATH'], 'a') as f:
             f.write(str(TOOLS / 'bin') + '\n')
@@ -50,10 +64,8 @@ def install(name):
     keg = PREFIX / 'Cellar' / name / version
     env = environment()
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
-        installed = subprocess.run(['brew', 'list', '--versions', name], capture_output=True, text=True)
-        operation = 'upgrade' if installed.returncode == 0 and installed.stdout.strip() else 'install'
         # Runtime versions stay pinned; existing CMake/Python avoid costly tool upgrades.
-        run(['brew', operation, '--ignore-dependencies', '--env=std', name], env=env)
+        run(['brew', 'install', '--ignore-dependencies', name], env=env)
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
         raise RuntimeError(f'Expected pinned media package is missing: {keg}')
     opt = PREFIX / 'opt' / name
