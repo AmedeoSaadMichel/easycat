@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 RECORDS = json.loads((ROOT / 'distribution/compliance/macos-sources.json').read_text())
 COMPONENTS = {r['component'].rsplit('-', 1)[0]: r['component'].rsplit('-', 1)[1] for r in RECORDS}
 PREFIX = Path('/usr/local')
-TOOLS = ROOT / 'target/intel-build-tools'
+# Homebrew denies reads from the runner's home while compiling formulae.
+TOOLS = PREFIX / 'Cellar/easycat-intel-build-tools/1'
 
 
 def run(args, **kwargs):

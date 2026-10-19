@@ -69,6 +69,13 @@ jobs:
           python scripts/verify_distributed_tools.py --helpers target/macos-package/easycat.app/Contents/Helpers --libraries target/macos-package/easycat.app/Contents/Frameworks --output target/macos-verification/codecs
           python scripts/verify_macos_package.py
           git archive --format=tar.gz --prefix=easycat-0.1.0-preview.6-intel/ --output=dist/easycat-0.1.0-preview.6-intel-source.tar.gz HEAD
+      - name: Preserve media build logs
+        if: always()
+        run: |
+          mkdir -p target/macos-verification/homebrew-logs
+          if test -d "$HOME/Library/Logs/Homebrew"; then
+            cp -R "$HOME/Library/Logs/Homebrew/." target/macos-verification/homebrew-logs/
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
