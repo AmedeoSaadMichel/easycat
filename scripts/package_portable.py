@@ -144,6 +144,7 @@ def package(platform):
     licenses = stage / 'Licenses'
     licenses.mkdir()
     prepare_notices(licenses / 'ThirdParty')
+    shutil.copy2(ROOT / 'LICENSE', licenses / 'easycat-MIT.txt')
     for item in vendor.iterdir():
         if item.is_file():
             shutil.copy2(item, licenses / item.name)

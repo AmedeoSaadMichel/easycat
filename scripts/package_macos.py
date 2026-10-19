@@ -93,6 +93,7 @@ def main():
     licenses = RESOURCES / 'Licenses'
     licenses.mkdir()
     prepare_notices(licenses / 'ThirdParty')
+    shutil.copy2(ROOT / 'LICENSE', licenses / 'easycat-MIT.txt')
     for package in sorted(packages):
         destination = licenses / (package.parent.name + '-' + package.name)
         destination.mkdir()

@@ -9,8 +9,8 @@ use std::collections::HashMap;
 use std::sync::mpsc::{self, Receiver};
 
 /// Monotonic application build; increment for every newly distributed app build.
-pub const BUILD: u64 = 5;
-pub const VERSION: &str = "0.1.0-preview.5";
+pub const BUILD: u64 = 6;
+pub const VERSION: &str = "0.1.0-preview.6";
 const REPOSITORY: &str = "https://github.com/AmedeoSaadMichel/easycat-releases";
 const MANIFEST_URL: &str =
     "https://raw.githubusercontent.com/AmedeoSaadMichel/easycat-releases/main/updates.json";
