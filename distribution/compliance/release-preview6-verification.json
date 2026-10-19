@@ -1,0 +1,122 @@
+{
+  "status": "passed",
+  "release": "v0.1.0-preview.6",
+  "verified_on": "2026-10-19",
+  "application_source_private": false,
+  "application_license": "MIT",
+  "application_source_tag": "https://github.com/AmedeoSaadMichel/easycat/tree/v0.1.0-preview.6",
+  "application_source_archive": "easycat-0.1.0-preview.6-source.tar.gz",
+  "application_build": 6,
+  "cargo_lock_sha256": "a798e23639aad4e80f9b8f79b513fd6a8ef32d08da7e2df186a9bb027716704c",
+  "third_party_versions_sources_and_checksums_unchanged": true,
+  "cargo_lock_change": "Only workspace package names changed from easycut to easycat; all third-party dependencies and features are unchanged from preview 5.",
+  "native_build_run": {
+    "conclusion": "success",
+    "headSha": "a44395c4386e3c81107a9df2ed6d814d959c3c33",
+    "url": "https://github.com/AmedeoSaadMichel/easycat/actions/runs/39221422129"
+  },
+  "validation": {
+    "native_windows": "workspace tests, release build, PE imports and generated-media packaging/export checks passed",
+    "native_linux": "workspace tests, release build, generated-media packaging/export checks and packaged GUI smoke test under Xvfb passed",
+    "macos": "release workspace build; 67 Rust tests, fmt and Clippy passed; final DMG integrity and deep/strict signature checks passed; final bundled codec, 10-bit, remux, thumbnail and audio tests passed",
+    "python_regression_tests": "10 passed",
+    "development_simulations_excluded_from_release": true
+  },
+  "platforms": {
+    "windows": {
+      "app_sha256": "758f4c64763e7a53aff8e7f1f3f5e2e17ed1db8b0d9210cc697ecb68ee8f9482",
+      "source_commit": "a44395c4386e3c81107a9df2ed6d814d959c3c33",
+      "direct_ffmpeg_library_linkage": false,
+      "libraries": [
+        "kernel32.dll",
+        "ole32.dll",
+        "combase.dll",
+        "shell32.dll",
+        "user32.dll",
+        "shlwapi.dll",
+        "api-ms-win-core-synch-l1-2-0.dll",
+        "bcryptprimitives.dll",
+        "OPENGL32.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "SHELL32.dll",
+        "GDI32.dll",
+        "ADVAPI32.dll",
+        "uiautomationcore.dll",
+        "oleaut32.dll",
+        "imm32.dll",
+        "dwmapi.dll",
+        "uxtheme.dll",
+        "ntdll.dll"
+      ],
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 40,
+      "banner_link_present": true,
+      "update_checker_present": true,
+      "application_build": 6,
+      "license_bundle_preserved": true,
+      "application_mit_license_included": true
+    },
+    "linux": {
+      "app_sha256": "b6f3e123af95720013e80be0bedb4932a9171be9ac50534a629e759b9e147f1d",
+      "source_commit": "a44395c4386e3c81107a9df2ed6d814d959c3c33",
+      "direct_ffmpeg_library_linkage": false,
+      "libraries": [
+        "libgcc_s.so.1",
+        "libm.so.6",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 27,
+      "banner_link_present": true,
+      "update_checker_present": true,
+      "application_build": 6,
+      "license_bundle_preserved": true,
+      "application_mit_license_included": true
+    },
+    "macos": {
+      "application_build": 6,
+      "app_sha256": "5d9e3a825e8ac3af0c6859ae6fc4882b70affabd07aaaddc608ad6df4a01974b",
+      "source_commit": "a44395c4386e3c81107a9df2ed6d814d959c3c33",
+      "libraries": [
+        "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit",
+        "/usr/lib/libSystem.B.dylib",
+        "/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL",
+        "/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics",
+        "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation",
+        "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation",
+        "/usr/lib/libobjc.A.dylib",
+        "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices",
+        "/System/Library/Frameworks/CoreVideo.framework/Versions/A/CoreVideo",
+        "/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon",
+        "/usr/lib/libiconv.2.dylib",
+        "/System/Library/Frameworks/ColorSync.framework/Versions/A/ColorSync",
+        "/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices"
+      ],
+      "direct_ffmpeg_library_linkage": false,
+      "bundled_helpers_and_libraries_unchanged": true,
+      "preserved_file_count": 2706,
+      "license_bundle_preserved": true,
+      "application_mit_license_included": true,
+      "signature": "ad-hoc, codesign deep/strict verified",
+      "dmg_integrity": "hdiutil verified"
+    }
+  },
+  "update_policy": {
+    "latest_build": 6,
+    "minimum_build": 4,
+    "per_platform": true,
+    "failures_preserve_offline_use": true,
+    "automatic_installation": false
+  },
+  "dependency_verification_baseline": "https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.2/RELEASE-VERIFICATION.json",
+  "preserved_binary_baseline": "v0.1.0-preview.5",
+  "scope": "Native preview 6 application binaries verified on each platform. Final packages preserve codec tools, libraries and existing third-party notices byte-for-byte from preview 5, replacing application executables and build metadata and adding the MIT application license. Corresponding third-party sources retain their verified checksums. This does not claim a full dependency toolchain reconstruction or exhaustive interactive desktop certification.",
+  "preview_limits": [
+    "macOS Apple Silicon only, macOS 15+, ad-hoc signed and not notarized",
+    "Windows x64 unsigned; manual interactive GUI certification outside scope",
+    "Linux x86_64 glibc 2.35+ with OpenGL desktop; Xvfb smoke test passed",
+    "Linux update checks require /usr/bin/curl; failures preserve offline use"
+  ]
+}

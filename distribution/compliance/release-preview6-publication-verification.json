@@ -1,0 +1,63 @@
+{
+  "release": "https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.6",
+  "verified_on": "2026-10-19",
+  "public": true,
+  "prerelease": true,
+  "all_uploaded_checksums_match": true,
+  "assets": [
+    {
+      "name": "easycat-0.1.0-linux-x86_64-legal-preview.tar.gz",
+      "sha256": "108f7eef712d98c37db8251ec3382caf8877375f15ec670d51fdc7b96bdaf9e5",
+      "bytes": 109693737,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-macos-arm64-legal-preview.dmg",
+      "sha256": "13b58c93a993f15a30750221b834aeae35b46eb2ceee7704ffe29216597558a6",
+      "bytes": 44457910,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-macos-third-party-source.tar.gz",
+      "sha256": "afc488d42290081a5ab6a55907a1cdc91b4948d946ae0adeaa7f4652b934769a",
+      "bytes": 143207001,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-portable-third-party-source.tar.gz",
+      "sha256": "205d0b78b9e49c82f2d319fdac080d4feaf4b8b864bc730c9d4821c4ed511e0b",
+      "bytes": 1413978625,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-preview.6-source.tar.gz",
+      "sha256": "a692daaaba0487ceec77713297f7d57290cade1aaef5f7f44fdc52f3b036d005",
+      "bytes": 10749902,
+      "anonymous_download": true
+    },
+    {
+      "name": "easycat-0.1.0-windows-x64-legal-preview.zip",
+      "sha256": "f1cf8938b291a65bc157143cb9966be094d18894f0b28e76acf3f76d12229f8f",
+      "bytes": 103109949,
+      "anonymous_download": true
+    },
+    {
+      "name": "RELEASE-VERIFICATION.json",
+      "sha256": "127fc977f9ccc859acc7247fd550c5df89636a556c297c776aa65b2ca711eb47",
+      "bytes": 5814,
+      "anonymous_download": true
+    },
+    {
+      "name": "rust-third-party-sources.tar.gz",
+      "sha256": "70d751dce31e867fb0e185e0559c5901e640d09695e33c7c117adbf1cf456d2e",
+      "bytes": 80843126,
+      "anonymous_download": true
+    },
+    {
+      "name": "SHA256SUMS",
+      "sha256": "0fde5bbe0fda5be33e901ef05ab89cade6be71acced1e50ae78cc2ed7f7c580a",
+      "bytes": 855,
+      "anonymous_download": true
+    }
+  ]
+}

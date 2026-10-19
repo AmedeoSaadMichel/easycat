@@ -24,7 +24,7 @@ Connection errors, timeouts, HTTP errors, unsupported platforms, missing HTTPS c
 4. Raise `minimum_build` only when older update-aware builds must be retired. Keep it positive and no greater than `latest_build`.
 5. Copy the reviewed JSON to the root `updates.json` of the public `easycat-releases` repository and publish that file. To roll back a requirement, lower the minimum and check again in the app.
 
-The live policy advertises preview 5 with latest build 5 and minimum build 4 on all three platforms. Preview 5 is optional for preview 4 users. It was activated only after anonymous download and checksum verification. Preview 3 and earlier do not contain the checker and cannot be retroactively blocked. Users must install preview 4 once to receive future notifications. A policy-only change does not update an installed binary.
+The live policy advertises preview 6 with latest build 6 and minimum build 4 on all three platforms. Preview 6 is optional for preview 4 and 5 users. It was activated only after anonymous download and checksum verification. Preview 3 and earlier do not contain the checker and cannot be retroactively blocked. Users of preview 3 or earlier must install a current preview once to receive future notifications. A policy-only change does not update an installed binary.
 
 
 ## Transport and privacy
