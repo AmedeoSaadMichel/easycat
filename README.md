@@ -10,7 +10,7 @@ A local Rust desktop app for trimming and compressing videos, with a cosmic nati
 
 Preview downloads are available for macOS Apple Silicon, Windows x64 and Linux x86_64. Intel Mac packages are not available yet. See the download page for requirements, installation steps and validation limits.
 
-Install the macOS Apple Silicon preview through the [project Homebrew tap](docs/homebrew.md) from the public distribution repository. See [distribution with private application source](docs/private-code-distribution.md). Preparation for the official catalog is tracked in the [Homebrew submission checklist](docs/homebrew-submission.md).
+Install the macOS Apple Silicon preview through the [project Homebrew tap](docs/homebrew.md) from the public distribution repository. See [open-source distribution](docs/open-source-distribution.md). Preparation for the official catalog is tracked in the [Homebrew submission checklist](docs/homebrew-submission.md).
 
 ### Install with Homebrew
 
@@ -54,6 +54,10 @@ The initial **Rough estimate** is a heuristic. After you select a compression pr
 - If refinement fails, the UI keeps the rough estimate and exposes the error in a tooltip.
 
 Copy/remux estimates remain proportional to the source size; variable bitrate and keyframe boundaries can affect them.
+
+## License
+
+easycat is licensed under the [MIT License](LICENSE). The application source repository is [AmedeoSaadMichel/easycut](https://github.com/AmedeoSaadMichel/easycut). Third-party components retain their own licenses; see [third-party notices](distribution/THIRD-PARTY-NOTICES.md) and the [distribution guide](docs/open-source-distribution.md).
 
 ## Development
 

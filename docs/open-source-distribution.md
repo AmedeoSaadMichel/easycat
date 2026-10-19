@@ -1,6 +1,6 @@
-# Distribute easycat while keeping its source private
+# Distribute the MIT-licensed easycat application
 
-The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.5). The development repository remains private. The public repository contains only download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
+The verified preview is published at [easycat-releases](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.5). The application source is licensed under [MIT](../LICENSE) and maintained in [easycut](https://github.com/AmedeoSaadMichel/easycut). The separate distribution repository contains download documentation, the Homebrew cask, checksums and the verification report; installers and corresponding third-party source archives are release assets.
 
 Preview 5 hides Updates when current and excludes development simulation flags from all shipped executables. Native application commit `183d209c54ab5daac2bd216de599468c927ea79c` passed Windows/Linux CI tests, native packaging/export checks and Linux Xvfb smoke testing. macOS signature/image checks passed. Codec libraries, notices and corresponding sources are unchanged from preview 4. All eight uploaded checksums matched local assets; anonymous download checks and the downloaded macOS DMG matched the cask. The live policy was advanced afterward to latest build 5, retaining minimum build 4. See [the preview 5 verification report](../distribution/compliance/release-preview5-verification.json).
 
@@ -24,13 +24,13 @@ All three existing easycat preview packages contain **FFmpeg GPL-3.0-or-later**:
 
 Each configure string has `--enable-gpl` and `--enable-version3`; none has `--enable-nonfree`. The upstream BtbN repository's MIT license covers its build scripts, **not** the FFmpeg binaries. x264/x265 and other dependencies retain their own licenses. See the recorded evidence in [distribution/compliance](../distribution/compliance).
 
-## Why the app source can remain private
+## Application and third-party licenses
 
-The engine calls ffmpeg/ffprobe/ffplay as external executables using ordinary arguments, media files and process pipes. It does not link libav* into the easycat process; the actual macOS executable's load commands confirm that separation. GPL software and an independent application may be distributed as an aggregate, provided the aggregate's terms preserve the rights of each component. This architecture supports keeping easycat's source private; process separation alone would not excuse an otherwise combined/derived work.
+The engine calls ffmpeg/ffprobe/ffplay as external executables using ordinary arguments, media files and process pipes. It does not link libav* into the easycat process; the actual macOS executable's load commands confirm that separation. GPL software and an independent application may be distributed as an aggregate, provided the aggregate's terms preserve the rights of each component. easycat's own code is licensed under MIT, while the bundled tools retain their upstream licenses; process separation alone would not excuse an otherwise combined/derived work.
 
 Sources: [GNU FAQ on aggregation and communication](https://www.gnu.org/licenses/gpl-faq.en.html#MereAggregation), [GPLv3 sections 5 and 6](https://www.gnu.org/licenses/gpl.en.html), [FFmpeg licensing](https://ffmpeg.org/legal.html).
 
-The workspace's existing MIT metadata does not require publishing private source. Do not replace third-party GPL notices with an easycat license, restrict modification/reverse engineering of those components, or promise rights you cannot grant. The source boundary and any binary distribution terms should be reviewed before a public release; this preparation is technical evidence, not a legal certification. Codec patent rights are distinct from software copyright licenses.
+The root MIT license covers easycat's own code and is declared by every workspace package. Do not replace third-party GPL notices with an easycat license, restrict modification/reverse engineering of those components, or promise rights you cannot grant. The source boundary and any binary distribution terms should be reviewed before a public release; this preparation is technical evidence, not a legal certification. Codec patent rights are distinct from software copyright licenses.
 
 ## Materials prepared
 
@@ -45,7 +45,7 @@ The 127 recipes are a conservative source superset, not a claim that every depen
 
 ## Prepare a separate public repository payload
 
-**Never make the current easycut repository public to publish downloads.** Use a new repository with a fresh history containing only the generated README, Homebrew Cask, installer files, licenses/notices and third-party source archives.
+The MIT-licensed application source belongs in the easycut repository. Publish download assets through the separate easycat-releases repository, containing the generated README, Homebrew Cask, installer files, licenses/notices and third-party source archives. Making the source repository public is a separate repository setting; these preparation commands do not change visibility.
 
 The proposed repository name below is an example; preparation does not create it or upload anything:
 
@@ -55,11 +55,11 @@ python3 scripts/prepare_public_distribution.py \
   --output dist/public-distribution
 ```
 
-The command refuses the private development repository, checks original package and collected source checksums, adds notices to separate installer copies, and creates the public Cask with the new DMG checksum. It keeps the original binaries and packages intact and ad-hoc signs only the copied macOS app after adding documents. The native engine/UI binaries are unchanged. macOS remains an unnotarized preview; a personal Homebrew tap does not change Gatekeeper behaviour.
+The command refuses the application source repository as a download destination, checks original package and collected source checksums, adds notices to separate installer copies, and creates the public Cask with the new DMG checksum. It keeps the original binaries and packages intact and ad-hoc signs only the copied macOS app after adding documents. The native engine/UI binaries are unchanged. macOS remains an unnotarized preview; a personal Homebrew tap does not change Gatekeeper behaviour.
 
 The preparation command requires the completed evidence in `distribution/compliance/release-verification.json`. Review `PREPARATION-STATUS.json`, the payload README and the source manifests before publishing. The four Rust declarations have complete matching evidence; native verification scope and preview limits remain explicit in the report. Distribution terms must preserve third-party rights. No legal certification, exhaustive interactive/GPU certification or byte-identical toolchain reproduction is implied.
 
-After review, create a **new** public distribution repository, copy README/Casks/notices and source result manifests only, and upload all installer/source archives plus SHA256SUMS to `v0.1.0-preview.2`. Do not push the easycut Git history, Cargo workspace, local credentials, staging app directory or working files. Publish source assets beside the binaries at the same release/download location, without authentication or fees, and retain them for as long as corresponding binaries are offered. GPLv3 section 6(d) permits an equivalent source download alongside object-code downloads; an upstream URL or incomplete source recipe list alone is not the prepared distribution method.
+After review, create a **new** public distribution repository, copy README/Casks/notices and source result manifests only, and upload all installer/source archives plus SHA256SUMS to `v0.1.0-preview.2`. Keep application source and development history in easycut rather than duplicating them in the download repository. Exclude local credentials, the staging app directory and working files from the distribution payload. Publish source assets beside the binaries at the same release/download location, without authentication or fees, and retain them for as long as corresponding binaries are offered. GPLv3 section 6(d) permits an equivalent source download alongside object-code downloads; an upstream URL or incomplete source recipe list alone is not the prepared distribution method.
 
 The generated Cask/README point exclusively to that separate repository. Existing tap users must replace the old private remote once. New users can then run the tap command followed by `brew install --cask easycat`. No official Homebrew submission or Apple Developer ID is required to maintain that personal tap.
 

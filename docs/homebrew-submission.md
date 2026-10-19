@@ -6,14 +6,14 @@ Status checked on 2026-10-17: **not eligible for submission yet**. The working p
 
 | Check | Current evidence | Required action |
 | --- | --- | --- |
-| Public upstream | Repository is private | Owner must make it public when ready; verify homepage and DMG download without credentials |
+| Public upstream | MIT license and source documentation are prepared | Owner must make the source repository public when ready; verify homepage and DMG download without credentials |
 | Project age | Created 2026-10-16 | Normally wait at least 30 days, until 2026-11-15 |
 | Public interest | 0 stars, forks and watchers | For an owner submission, normally 225 stars OR 90 forks OR 90 watchers; an independently supported exception is up to Homebrew |
 | macOS security | Existing DMG is ad-hoc signed, not notarized | Obtain Developer ID Application certificate, notarize, staple, and pass Gatekeeper |
 | Signing identity | Only Apple Development identities found locally | Create/install a Developer ID Application identity through the owner's Apple Developer account |
 | Default release channel | Only `v0.1.0-preview.1` exists | Validate and publish the release recommended for general users; do not relabel an untested preview as stable |
 | Architecture | arm64 only, macOS 15 minimum | Declare only arm64; test on latest stable macOS and the declared minimum |
-| Licensing | Cargo declares MIT; no root license file; bundled source obligations remain unresolved | Owner confirms copyright/license text and completes dependency/source redistribution review before public distribution |
+| Licensing | Root MIT license is included and inherited by all workspace packages; dependency notices and source verification are documented | Preserve third-party licenses and provide matching corresponding sources for each release |
 | Name collision | No easycat PR found in Homebrew/homebrew-cask on check date | Repeat open/closed PR search and cask token search immediately before submitting |
 
 The interest metrics and age are Homebrew's normal policy, not a promise of acceptance. An exception needs real public evidence, not manufactured stars or requests. A stable release is the planned upstream channel here; Homebrew does not impose a universal ban on preview channels.
@@ -79,7 +79,7 @@ brew uninstall --cask easycat
 brew lgtm --online
 ```
 
-Record the actual output and manual app test results. Anonymous download, installation, Gatekeeper, livecheck and official new-cask audit have **not** passed for the current private preview. Local style/loading and its SHA-256 are already verified; those checks alone do not establish official eligibility.
+Record the actual output and manual app test results. Anonymous download, installation, Gatekeeper, livecheck and official new-cask audit have **not** passed for the preview described by this checklist. Local style/loading and its SHA-256 are already verified; those checks alone do not establish official eligibility.
 
 ## Submit after the gates pass
 

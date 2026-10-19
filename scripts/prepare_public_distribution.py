@@ -53,7 +53,7 @@ def main():
     if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', args.repository):
         parser.error('Repository must be OWNER/REPO')
     if args.repository.lower() == 'amedeosaadmichel/easycut':
-        parser.error('Use a separate public distribution repository; keep easycut private')
+        parser.error('Use the separate distribution repository for download assets')
     if digest(ROOT / 'Cargo.lock') != 'd6d8c3585a1c883c260871d0627316ae607822a68c7dcf2457fe3307fcb69d87':
         parser.error('The original preview dependency lock changed; re-audit the actual binary dependencies')
     verification = json.loads((ROOT / 'distribution/compliance/release-verification.json').read_text())
@@ -147,7 +147,7 @@ def main():
         'repository': args.repository, 'published': False, 'owner_release_review_required': False, 'technical_checks_passed': True,
         'source_trees_collected': {'macos': len(mac), 'portable_candidates': len(portable)},
         'original_application_binaries_changed': False, 'macos_signature': 'ad-hoc, not notarized',
-        'source_repo_must_remain_private': True, 'asset_sha256': checksums,
+        'application_license': 'MIT', 'asset_sha256': checksums,
         'license_cases_resolved': verification['license_cases_resolved'],
         'verification_scope': verification['scope'],
     }, indent=2) + '\n')
@@ -156,7 +156,7 @@ def main():
     (output / 'README.md').write_text(f'''# easycat downloads
 
 Cut. Transform. Meow. Local video trimming, compression and container conversion.
-This repository distributes binaries and third-party source materials only. The easycat application source and development history remain private.
+This repository distributes binaries and third-party source materials only. The easycat application source is licensed under MIT and maintained at [AmedeoSaadMichel/easycut](https://github.com/AmedeoSaadMichel/easycut).
 
 ## Install
 
@@ -209,7 +209,7 @@ Licenses and notices are included in each installer under Licenses/ThirdParty (i
 Native codec tests and the recorded source/license checks passed; see RELEASE-VERIFICATION.json for their exact scope and preview limits. The repository and release must exist before these links work.
 ''')
     print('Prepared review directory:', output)
-    print('No repository was created or published. Read docs/private-code-distribution.md before uploading.')
+    print('No repository was created or published. Read docs/open-source-distribution.md before uploading.')
 
 
 if __name__ == '__main__':

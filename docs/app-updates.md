@@ -2,7 +2,7 @@
 
 Update-aware easycat builds check the public policy once at startup, off the UI thread. The footer **Updates** button checks again when an update is available or a check has failed. It stays hidden while checking and when the app is current. Downloads open the release page in the external browser; the app never installs or replaces itself automatically.
 
-The endpoint is `https://raw.githubusercontent.com/AmedeoSaadMichel/easycat-releases/main/updates.json`. The maintained copy is `distribution/updates.json`. Only this policy is public; application source stays private.
+The endpoint is `https://raw.githubusercontent.com/AmedeoSaadMichel/easycat-releases/main/updates.json`. The maintained copy is `distribution/updates.json`. The update policy is hosted separately from the MIT-licensed [application source repository](https://github.com/AmedeoSaadMichel/easycut).
 
 ## Policy
 

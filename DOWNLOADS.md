@@ -17,7 +17,7 @@ Preview 5 hides Updates when already current, while preserving update notices an
 
 [Release details and files](https://github.com/AmedeoSaadMichel/easycat-releases/releases/tag/v0.1.0-preview.5) · [SHA-256 checksum](https://github.com/AmedeoSaadMichel/easycat-releases/releases/download/v0.1.0-preview.5/SHA256SUMS) · [Report a problem](https://github.com/AmedeoSaadMichel/easycat-releases/issues)
 
-Packages are compiled and tested on native CI runners. Windows desktop interaction still needs hands-on validation; Linux startup/rendering is checked under Xvfb. Intel Mac packages will receive download links when ready. Public downloads and corresponding third-party sources are hosted in a separate distribution repository; the application source remains private. See the [distribution preparation](docs/private-code-distribution.md).
+Packages are compiled and tested on native CI runners. Windows desktop interaction still needs hands-on validation; Linux startup/rendering is checked under Xvfb. Intel Mac packages will receive download links when ready. Public downloads and corresponding third-party sources are hosted in a separate distribution repository; the application source is licensed under [MIT](LICENSE) and maintained in [easycut](https://github.com/AmedeoSaadMichel/easycut). See the [distribution preparation](docs/open-source-distribution.md).
 
 ## Install on macOS
 
