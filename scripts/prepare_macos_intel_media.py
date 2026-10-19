@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,7 +40,6 @@ def tools():
     run(['brew', 'update'])
     tap = PREFIX / 'Homebrew/Library/Taps/easycat/homebrew-intel/Formula'
     tap.mkdir(parents=True, exist_ok=True)
-    import shutil
     for recipe in (ROOT / 'distribution/compliance/intel-formulae').glob('*.rb'):
         shutil.copy2(recipe, tap / recipe.name)
     run([sys.executable, '-m', 'venv', TOOLS])
@@ -72,7 +72,11 @@ def install(name):
     keg = PREFIX / 'Cellar' / name / version
     env = environment()
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
-        # Runtime versions stay pinned; existing CMake/Python avoid costly tool upgrades.
+        # Only the disposable CI runner may replace its preinstalled core formula.
+        if (PREFIX / 'Cellar' / name).exists():
+            if os.environ.get('GITHUB_ACTIONS') != 'true':
+                raise RuntimeError('Replacing preinstalled formulae is restricted to CI')
+            run(['brew', 'uninstall', '--force', '--ignore-dependencies', name], env=env)
         run(['brew', 'install', '--ignore-dependencies', 'easycat/intel/' + name], env=env)
     if not (keg / 'INSTALL_RECEIPT.json').is_file():
         raise RuntimeError(f'Expected pinned media package is missing: {keg}')
