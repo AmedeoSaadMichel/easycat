@@ -56,6 +56,7 @@ class X264 < Formula
   end
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     args = %W[
       --prefix=#{prefix}
       --disable-lsmash

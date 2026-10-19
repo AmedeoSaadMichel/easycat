@@ -17,6 +17,7 @@ class Lame < Formula
   uses_from_macos "ncurses"
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     # LAME still calls undeclared legacy ID3 APIs, which do not compile as C23.
     # https://sourceforge.net/p/lame/bugs/517/
     ENV["ac_cv_prog_cc_c23"] = "no"

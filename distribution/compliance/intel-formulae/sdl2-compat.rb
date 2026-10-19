@@ -13,6 +13,7 @@ class Sdl2Compat < Formula
   deny_network_access!
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     args = ["-DCMAKE_INSTALL_RPATH=#{rpath(target: formula_opt_lib("sdl3"))}"] if OS.mac?
 
     # We override install_prefix to make sure substituted CMAKE_INSTALL_FULL_* use

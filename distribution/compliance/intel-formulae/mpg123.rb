@@ -14,6 +14,7 @@ class Mpg123 < Formula
   end
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     args = %w[
       --with-module-suffix=.so
       --enable-static

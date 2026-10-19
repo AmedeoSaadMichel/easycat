@@ -25,6 +25,7 @@ class OpensslAT4 < Formula
   allow_network_access! :build
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     configure_args = %W[
       --prefix=#{prefix}
       --openssldir=#{pkgetc}

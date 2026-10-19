@@ -42,6 +42,7 @@ class Sdl3 < Formula
   deny_network_access!
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     inreplace "cmake/sdl3.pc.in", "@SDL_PKGCONFIG_PREFIX@", HOMEBREW_PREFIX
 
     args = %w[

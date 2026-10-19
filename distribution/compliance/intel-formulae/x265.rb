@@ -18,6 +18,7 @@ class X265 < Formula
   allow_network_access! :test
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     ENV.remove_from_cflags(/-m(?:arch|cpu)=\S+/) # Preserve runtime CPU detection with std env.
     # Build based off the script at ./build/linux/multilib.sh
     args = %W[

@@ -20,6 +20,7 @@ class SvtAv1 < Formula
   end
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     # Features are enabled based on compiler support, and then the appropriate
     # implementations are chosen at runtime.
     # See https://gitlab.com/AOMediaCodec/SVT-AV1/-/blob/master/Source/Lib/Codec/common_dsp_rtcd.c

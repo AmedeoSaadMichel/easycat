@@ -21,6 +21,7 @@ class Opus < Formula
   end
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     system "./autogen.sh" if build.head?
     system "./configure", "--disable-doc", *std_configure_args
     system "make", "install"

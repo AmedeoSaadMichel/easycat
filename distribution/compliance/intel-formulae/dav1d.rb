@@ -15,6 +15,7 @@ class Dav1d < Formula
   end
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     system "meson", "setup", "build", *std_meson_args
     system "meson", "compile", "-C", "build", "--verbose"
     system "meson", "install", "-C", "build"

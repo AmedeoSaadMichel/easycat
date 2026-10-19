@@ -16,6 +16,7 @@ class Xz < Formula
   deny_network_access!
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     system "./configure", "--disable-silent-rules", "--disable-nls", *std_configure_args
     system "make", "check"
     system "make", "install"

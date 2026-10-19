@@ -18,6 +18,7 @@ class Libvpx < Formula
   deny_network_access!
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     ENV.remove_from_cflags(/-m(?:arch|cpu)=\S+/) # Preserve runtime CPU detection with std env.
     # NOTE: `libvpx` will fail to build on new macOS versions before the
     # `configure` and `build/make/configure.sh` files are updated to support

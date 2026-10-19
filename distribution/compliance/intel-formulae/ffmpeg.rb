@@ -52,6 +52,7 @@ class Ffmpeg < Formula
   deny_network_access!
 
   def install
+    ENV.delete("CPATH") # Let the selected SDK order C++ and C headers correctly.
     # The new linker leads to duplicate symbol issue https://github.com/homebrew-ffmpeg/homebrew-ffmpeg/issues/140
     ENV.append "LDFLAGS", "-Wl,-ld_classic" if DevelopmentTools.ld64_version.between?("1015.7", "1022.1")
 
