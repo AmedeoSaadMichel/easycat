@@ -1,0 +1,48 @@
+name: macOS Intel Rust build cache
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Source commit or ref to compile
+        required: true
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+      - name: Verify native Intel runner
+        run: test "$(uname -m)" = x86_64
+      - name: Rust toolchain
+        run: rustup update stable --no-self-update
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/debug
+            target/release
+          key: macos-intel-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
+          restore-keys: |
+            macos-intel-${{ hashFiles('Cargo.lock') }}-
+      - name: Compile lint, test and release targets without media-tool installation
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --locked -- -D warnings
+          cargo test --workspace --locked --no-run
+          cargo build --workspace --release --locked
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/debug
+            target/release
+          key: macos-intel-${{ hashFiles('Cargo.lock') }}-${{ github.run_id }}
