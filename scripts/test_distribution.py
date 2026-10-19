@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import prepare_public_distribution as public_distribution
 from package_macos import check_binary_architecture
+from prepare_macos_intel_media import parse_args as parse_intel_media_args
 
 from collect_distribution_sources import collect_crates, collect_mac
 from third_party_notices import prepare_notices
@@ -18,6 +19,11 @@ from assemble_release_verification import require_passed
 
 
 class DistributionTests(unittest.TestCase):
+    def test_intel_build_tool_setup_accepts_no_runtime_packages(self):
+        args = parse_intel_media_args(["--tools"])
+        self.assertTrue(args.tools)
+        self.assertEqual(args.packages, [])
+
     def test_intel_bundle_rejects_arm_only_binary(self):
         with patch('package_macos.run', return_value='arm64\n'):
             with self.assertRaisesRegex(RuntimeError, 'Wrong architecture'):

@@ -66,11 +66,19 @@ def install(name):
     print('Verified installed version:', name, version, flush=True)
 
 
-if __name__ == '__main__':
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('packages', nargs='*', choices=list(COMPONENTS))
+    parser.add_argument('packages', nargs='*')
     parser.add_argument('--tools', action='store_true')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    unknown = set(args.packages) - set(COMPONENTS)
+    if unknown:
+        parser.error('Unknown media packages: ' + ', '.join(sorted(unknown)))
+    return args
+
+
+if __name__ == '__main__':
+    args = parse_args()
     if args.tools:
         tools()
     for package in args.packages:
