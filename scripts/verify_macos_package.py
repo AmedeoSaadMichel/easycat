@@ -21,6 +21,10 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     info = json.loads((contents / 'Resources/build-info.json').read_text())
     assert info['architecture'] == platform.machine() == 'x86_64'
+    expected_components = {record['component'] for record in json.loads(
+        (ROOT / 'distribution/compliance/macos-sources.json').read_text())}
+    unexpected_components = set(info['homebrew_components']) - expected_components
+    assert not unexpected_components, f'Unreviewed bundled dependencies: {unexpected_components}'
     data = binary.read_bytes()
     assert info['application_version'].encode() in data
     assert b'--simulate-update=required' not in data

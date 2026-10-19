@@ -78,10 +78,20 @@ class Ffmpeg < Formula
       --enable-openssl
     ]
 
-    # Standard SDK builds must find pinned headers as well as pkg-config metadata.
+    # Standard SDK builds must prefer the pinned dependencies over runner libraries.
     runtime_deps = deps.reject(&:build?)
-    args << "--extra-cflags=#{runtime_deps.map { |dep| "-I#{HOMEBREW_PREFIX}/opt/#{dep.name}/include" }.join(" ")}"
-    args << "--extra-ldflags=#{runtime_deps.map { |dep| "-L#{HOMEBREW_PREFIX}/opt/#{dep.name}/lib" }.join(" ")}"
+    include_flags = runtime_deps.map { |dep| "-I#{HOMEBREW_PREFIX}/opt/#{dep.name}/include" }.join(" ")
+    library_flags = runtime_deps.map { |dep| "-L#{HOMEBREW_PREFIX}/opt/#{dep.name}/lib" }.join(" ")
+    pkg_config_dirs = runtime_deps.flat_map do |dep|
+      %W[#{HOMEBREW_PREFIX}/opt/#{dep.name}/lib/pkgconfig #{HOMEBREW_PREFIX}/opt/#{dep.name}/share/pkgconfig]
+    end.join(":")
+    ENV["PKG_CONFIG_PATH"] = pkg_config_dirs
+    ENV["PKG_CONFIG_LIBDIR"] = pkg_config_dirs
+    ENV.prepend "CPPFLAGS", include_flags
+    ENV.prepend "LDFLAGS", library_flags
+    args << "--extra-cflags=#{include_flags}"
+    args << "--extra-ldflags=#{library_flags}"
+    args += %w[--disable-xlib --disable-libxcb]
 
     # Needs corefoundation, coremedia, corevideo
     args += %w[--enable-videotoolbox --enable-audiotoolbox] if OS.mac?

@@ -89,7 +89,13 @@ def install(name):
     version = COMPONENTS[name]
     keg = PREFIX / 'Cellar' / name / version
     env = environment()
-    if not (keg / 'INSTALL_RECEIPT.json').is_file():
+    recipe_changed = False
+    if name == 'ffmpeg':
+        installed_recipe = keg / '.brew/ffmpeg.rb'
+        pinned_recipe = ROOT / 'distribution/compliance/intel-formulae/ffmpeg.rb'
+        recipe_changed = (not installed_recipe.is_file() or
+                          installed_recipe.read_bytes() != pinned_recipe.read_bytes())
+    if not (keg / 'INSTALL_RECEIPT.json').is_file() or recipe_changed:
         # Only the disposable CI runner may replace its preinstalled core formula.
         if (PREFIX / 'Cellar' / name).exists():
             run(['brew', 'uninstall', '--force', '--ignore-dependencies', name], env=env)

@@ -54,6 +54,39 @@ class DistributionTests(unittest.TestCase):
             self.assertEqual(opt.resolve(), new)
             self.assertEqual(linked.resolve(), new)
 
+    def test_intel_ffmpeg_cache_rebuilds_changed_recipe_and_reuses_matching_recipe(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            keg = root / 'Cellar/ffmpeg/2'
+            (keg / '.brew').mkdir(parents=True)
+            (keg / 'INSTALL_RECEIPT.json').write_text('{}')
+            (keg / '.brew/ffmpeg.rb').write_text('old build flags')
+            recipe = root / 'distribution/compliance/intel-formulae/ffmpeg.rb'
+            recipe.parent.mkdir(parents=True)
+            recipe.write_text('new pinned build flags')
+            (root / 'opt').mkdir()
+            linked = root / 'var/homebrew/linked/ffmpeg'
+            linked.parent.mkdir(parents=True)
+            actions = []
+
+            def brew(args, **kwargs):
+                actions.append(args[1])
+                if args[1] == 'install':
+                    (keg / '.brew/ffmpeg.rb').write_bytes(recipe.read_bytes())
+                elif args[1] == 'link':
+                    linked.symlink_to(keg)
+
+            with patch.object(intel_media, 'ROOT', root), \
+                    patch.object(intel_media, 'PREFIX', root), \
+                    patch.object(intel_media, 'COMPONENTS', {'ffmpeg': '2'}), \
+                    patch.object(intel_media, 'run', side_effect=brew), \
+                    patch.dict('os.environ', {'GITHUB_ACTIONS': 'true'}):
+                intel_media.install('ffmpeg')
+                self.assertEqual(actions, ['uninstall', 'install', 'link'])
+                actions.clear()
+                intel_media.install('ffmpeg')
+                self.assertEqual(actions, [])
+
     def test_intel_build_tool_setup_accepts_no_runtime_packages(self):
         args = parse_intel_media_args(["--tools"])
         self.assertTrue(args.tools)
