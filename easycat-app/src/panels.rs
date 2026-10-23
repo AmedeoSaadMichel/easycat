@@ -30,12 +30,12 @@ fn card(ui: &mut egui::Ui, selected: bool, title: &str, subtitle: &str, icon: us
             if selected { theme::MINT } else { theme::LINE },
         ))
         .rounding(12.0)
-        .inner_margin(6.0)
+        .inner_margin(4.0)
         .show(ui, |ui| {
             ui.set_min_width((ui.available_width() - 2.0).max(0.0));
-            ui.spacing_mut().item_spacing.y = 3.0;
+            ui.spacing_mut().item_spacing.y = 2.0;
             ui.horizontal(|ui| {
-                let (rect, _) = ui.allocate_exact_size(egui::vec2(30.0, 30.0), Sense::hover());
+                let (rect, _) = ui.allocate_exact_size(egui::vec2(28.0, 28.0), Sense::hover());
                 theme::operation_icon(ui.painter(), rect, icon);
                 ui.vertical(|ui| {
                     ui.set_max_width((ui.available_width() - 22.0).max(100.0));
@@ -94,6 +94,25 @@ pub fn size_line(ui: &mut egui::Ui, est: u64, base: u64) {
     });
 }
 
+const OPERATIONS: [&str; 3] = ["Trim only", "Change container", "Compress"];
+
+/// Shapes offered for the crop rectangle; `None` is free.
+const CROP_SHAPES: [(&str, Option<(u32, u32)>); 5] = [
+    ("Free", None),
+    ("1:1", Some((1, 1))),
+    ("16:9", Some((16, 9))),
+    ("9:16", Some((9, 16))),
+    ("4:5", Some((4, 5))),
+];
+
+fn operation_index(choice: Choice) -> usize {
+    match choice {
+        Choice::Copy => 0,
+        Choice::Remux(_) => 1,
+        Choice::Preset(_) | Choice::Target => 2,
+    }
+}
+
 pub enum PanelAction {
     None,
     MeasureAll,
@@ -103,27 +122,20 @@ pub enum PanelAction {
 pub fn show(ui: &mut egui::Ui, v: &mut Video) {
     let compact = ui.ctx().screen_rect().height() < 820.0;
     if compact {
-        let mut operation = match v.choice {
-            Choice::Copy => 0,
-            Choice::Remux(_) => 1,
-            _ => 2,
-        };
-        egui::ComboBox::from_id_salt("operation")
-            .width(ui.available_width() - 8.0)
-            .selected_text(["Trim only", "Change container", "Compress"][operation])
-            .show_ui(ui, |ui| {
-                for (index, name) in ["Trim only", "Change container", "Compress"]
-                    .into_iter()
-                    .enumerate()
-                {
-                    ui.selectable_value(&mut operation, index, name);
-                }
-            });
-        let current = match v.choice {
-            Choice::Copy => 0,
-            Choice::Remux(_) => 1,
-            _ => 2,
-        };
+        let mut operation = operation_index(v.choice);
+        // Crop shares the row with the operation: space is tight here.
+        ui.horizontal(|ui| {
+            egui::ComboBox::from_id_salt("operation")
+                .width((ui.available_width() - 120.0).max(120.0))
+                .selected_text(OPERATIONS[operation])
+                .show_ui(ui, |ui| {
+                    for (index, name) in OPERATIONS.into_iter().enumerate() {
+                        ui.selectable_value(&mut operation, index, name);
+                    }
+                });
+            crop_toggle(ui, v);
+        });
+        let current = operation_index(v.choice);
         if operation != current {
             let choice = match operation {
                 0 => Choice::Copy,
@@ -139,6 +151,8 @@ pub fn show(ui: &mut egui::Ui, v: &mut Video) {
             v.set_choice(choice);
         }
     } else {
+        // Keep the cards close so the settings below stay on screen.
+        ui.spacing_mut().item_spacing.y = 4.0;
         if card(
             ui,
             v.choice == Choice::Copy,
@@ -173,8 +187,18 @@ pub fn show(ui: &mut egui::Ui, v: &mut Video) {
             });
         }
     }
-    ui.separator();
+    if !compact {
+        ui.separator();
+        crop_toggle(ui, v);
+    }
+    crop_options(ui, v, compact);
     match v.choice {
+        Choice::Copy if v.crop_on => {
+            ui.label(
+                RichText::new(format!(".{} · re-encoded to apply the crop", v.out_ext()))
+                    .color(theme::MINT),
+            );
+        }
         Choice::Copy => {
             ui.label(
                 RichText::new(format!(
@@ -195,6 +219,10 @@ pub fn show(ui: &mut egui::Ui, v: &mut Video) {
             }
             ui.horizontal_wrapped(|ui| {
                 for c in [Container::Mp4, Container::Mkv, Container::Webm] {
+                    // Cropping re-encodes to H.264/H.265, which WebM cannot hold.
+                    if v.crop_on && c == Container::Webm {
+                        continue;
+                    }
                     if ui
                         .add(
                             egui::Button::new(c.ext().to_uppercase())
@@ -317,6 +345,72 @@ pub fn show(ui: &mut egui::Ui, v: &mut Video) {
     }
 }
 
+/// Crop sits beside the trim selection: it combines with any operation. The
+/// rectangle is dragged on the preview; the shape is picked here.
+fn crop_toggle(ui: &mut egui::Ui, v: &mut Video) {
+    let label = if v.crop_on {
+        format!("Crop {}×{}", v.crop.width, v.crop.height)
+    } else {
+        "Crop".into()
+    };
+    if ui.checkbox(&mut v.crop_on, label).changed() {
+        v.remux_excluded.clear();
+    }
+}
+
+fn crop_options(ui: &mut egui::Ui, v: &mut Video, compact: bool) {
+    if !v.crop_on {
+        return;
+    }
+    if compact {
+        // A narrow panel would wrap six buttons onto two rows.
+        let selected = CROP_SHAPES
+            .iter()
+            .find(|(_, ratio)| *ratio == v.crop_ratio)
+            .map_or("Free", |(name, _)| *name);
+        egui::ComboBox::from_id_salt("crop-shape")
+            .selected_text(selected)
+            .width(ui.available_width() - 8.0)
+            .show_ui(ui, |ui| {
+                for (name, ratio) in CROP_SHAPES {
+                    if ui.selectable_label(v.crop_ratio == ratio, name).clicked() {
+                        v.set_crop_ratio(ratio);
+                    }
+                }
+                if ui.selectable_label(false, "Full frame").clicked() {
+                    v.reset_crop();
+                }
+            });
+    } else {
+        ui.horizontal_wrapped(|ui| {
+            // Six buttons in one row: keep them snug.
+            ui.spacing_mut().item_spacing = egui::vec2(4.0, 2.0);
+            ui.spacing_mut().button_padding = egui::vec2(6.0, 3.0);
+            for (name, ratio) in CROP_SHAPES {
+                if ui
+                    .add(egui::Button::new(name).selected(v.crop_ratio == ratio))
+                    .clicked()
+                {
+                    v.set_crop_ratio(ratio);
+                }
+            }
+            if ui.button("Full frame").clicked() {
+                v.reset_crop();
+            }
+        });
+    }
+    if matches!(v.choice, Choice::Copy | Choice::Remux(_)) {
+        egui::ComboBox::from_id_salt("speed")
+            .selected_text(v.speed.label())
+            .width(ui.available_width() - 8.0)
+            .show_ui(ui, |ui| {
+                for speed in [Speed::Fast, Speed::Balanced, Speed::Small] {
+                    ui.selectable_value(&mut v.speed, speed, speed.label());
+                }
+            });
+    }
+}
+
 pub fn estimate_options(ui: &mut egui::Ui, v: &Video, measuring: bool) -> PanelAction {
     let mut action = PanelAction::None;
     if measuring {
@@ -334,4 +428,27 @@ pub fn estimate_options(ui: &mut egui::Ui, v: &Video, measuring: bool) -> PanelA
         }
     }
     action
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn crop_shapes_start_with_free_and_are_distinct() {
+        assert_eq!(CROP_SHAPES[0].1, None);
+        for (i, a) in CROP_SHAPES.iter().enumerate() {
+            for b in &CROP_SHAPES[i + 1..] {
+                assert_ne!(a.1, b.1);
+            }
+        }
+    }
+
+    #[test]
+    fn every_choice_maps_to_one_operation_card() {
+        assert_eq!(operation_index(Choice::Copy), 0);
+        assert_eq!(operation_index(Choice::Remux(Container::Mp4)), 1);
+        assert_eq!(operation_index(Choice::Target), 2);
+        assert_eq!(operation_index(Choice::Preset(0)), 2);
+    }
 }

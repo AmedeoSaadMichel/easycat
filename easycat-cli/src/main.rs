@@ -194,6 +194,7 @@ fn run(cli: Cli) -> easycat_core::Result<()> {
             };
             let container = container_of(&output);
             let settings = Settings {
+                crop: None,
                 codec,
                 container,
                 height,

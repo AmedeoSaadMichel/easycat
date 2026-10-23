@@ -61,6 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         output: dir.join("out.mp4"),
                         trim: None,
                         mode: Mode::Transcode(Settings {
+                            crop: None,
                             codec,
                             container: Container::Mp4,
                             height: target,

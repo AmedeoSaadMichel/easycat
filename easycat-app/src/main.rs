@@ -5,6 +5,7 @@
 )]
 mod app;
 mod controls;
+mod crop_overlay;
 mod panels;
 mod runtime;
 mod theme;

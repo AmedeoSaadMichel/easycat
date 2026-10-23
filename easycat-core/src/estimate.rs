@@ -26,15 +26,20 @@ fn reference(codec: Codec) -> (f64, f64) {
 
 /// Effective output height, never larger than the source.
 pub fn output_height(info: &VideoInfo, s: &Settings) -> u32 {
-    s.height.map_or(info.height, |h| h.min(info.height))
+    let base = s.crop.map_or(info.height, |c| c.height);
+    s.height.map_or(base, |h| h.min(base))
 }
 
 pub fn output_dims(info: &VideoInfo, s: &Settings) -> (u32, u32) {
     let h = output_height(info, s);
-    if info.height == 0 {
-        return (info.width, h);
+    // The crop, when there is one, is what gets scaled.
+    let (base_w, base_h) = s
+        .crop
+        .map_or((info.width, info.height), |c| (c.width, c.height));
+    if base_h == 0 {
+        return (base_w, h);
     }
-    let w = (info.width as f64 * h as f64 / info.height as f64).round() as u32;
+    let w = (base_w as f64 * h as f64 / base_h as f64).round() as u32;
     (w, h)
 }
 
@@ -158,6 +163,7 @@ mod tests {
 
     fn crf(codec: Codec, height: Option<u32>, crf: u8) -> Mode {
         Mode::Transcode(Settings {
+            crop: None,
             codec,
             container: Container::Mp4,
             height,
@@ -207,6 +213,7 @@ mod tests {
     fn fast_preset_estimates_larger_files() {
         let mode = |speed| {
             Mode::Transcode(Settings {
+                crop: None,
                 codec: Codec::H265,
                 container: Container::Mp4,
                 height: Some(720),
@@ -223,6 +230,7 @@ mod tests {
     #[test]
     fn target_preserves_requested_size() {
         let m = Mode::Transcode(Settings {
+            crop: None,
             codec: Codec::H264,
             container: Container::Mp4,
             height: None,
@@ -261,6 +269,7 @@ mod tests {
     fn sample_projection_adds_audio_and_scales_duration() {
         let i = info();
         let s = Settings {
+            crop: None,
             codec: Codec::H264,
             container: Container::Mp4,
             height: None,
@@ -271,5 +280,31 @@ mod tests {
         // 1 MB per 3 s of video over 30 s: 10 MB + 128 kbps audio (480 kB)
         let est = from_samples(&[(1_000_000, 3.0)], &i, &s, 30.0);
         assert_eq!(est, 10_000_000 + 480_000);
+    }
+
+    #[test]
+    fn a_crop_shrinks_the_output_dimensions_and_the_estimate() {
+        let info = crate::probe::parse_probe(r#"{"streams":[{"codec_type":"video","codec_name":"h264","width":1920,"height":1080,"r_frame_rate":"30/1"}],"format":{"duration":"60","size":"60000000","bit_rate":"8000000"}}"#).unwrap();
+        let mut s = Settings {
+            crop: None,
+            codec: Codec::H264,
+            container: Container::Mp4,
+            height: None,
+            rate: RateControl::Crf(22),
+            hardware: false,
+            speed: Speed::Balanced,
+        };
+        let full = estimate_bytes(&info, &Mode::Transcode(s), None);
+        s.crop = Some(crate::job::Crop {
+            x: 0,
+            y: 0,
+            width: 960,
+            height: 540,
+        });
+        assert_eq!(output_dims(&info, &s), (960, 540));
+        assert!(estimate_bytes(&info, &Mode::Transcode(s), None) < full);
+        // A height above the crop never upscales it.
+        s.height = Some(1080);
+        assert_eq!(output_dims(&info, &s), (960, 540));
     }
 }

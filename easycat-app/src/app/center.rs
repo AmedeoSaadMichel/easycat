@@ -175,6 +175,18 @@ impl App {
                                     ),
                                     egui::Color32::WHITE,
                                 );
+                                if v.crop_on {
+                                    let frame = (v.info.width, v.info.height);
+                                    let ratio = v.crop_ratio;
+                                    crate::crop_overlay::show(
+                                        ui,
+                                        target,
+                                        frame,
+                                        &mut v.crop,
+                                        ratio,
+                                        !self.exporting,
+                                    );
+                                }
                             } else {
                                 ui.put(
                                     egui::Rect::from_center_size(

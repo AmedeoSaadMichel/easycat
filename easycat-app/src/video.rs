@@ -4,7 +4,7 @@ use crate::worker::THUMBS;
 use easycat_core::estimate::estimate_bytes;
 use easycat_core::ffmpeg::hardware_encoder;
 use easycat_core::presets::Preset;
-use easycat_core::{Codec, Container, Mode, RateControl, Settings, Speed, Trim, VideoInfo};
+use easycat_core::{Codec, Container, Crop, Mode, RateControl, Settings, Speed, Trim, VideoInfo};
 use eframe::egui::TextureHandle;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -22,6 +22,7 @@ pub enum Choice {
 pub struct EstimateKey {
     path: PathBuf,
     choice: Choice,
+    crop: Option<Crop>,
     start: u64,
     end: u64,
     hardware: bool,
@@ -40,13 +41,19 @@ pub struct Video {
     pub presets: Vec<Preset>,
     pub choice: Choice,
     pub remux_excluded: Vec<u32>,
+    /// Crop is an option on top of any operation, like the trim selection.
+    pub crop_on: bool,
+    /// Rectangle kept when cropping, in displayed video pixels.
+    pub crop: Crop,
+    /// Shape the rectangle keeps while resized; `None` is free.
+    pub crop_ratio: Option<(u32, u32)>,
     pub target_mb: f64,
     pub hardware: bool,
     pub speed: Speed,
     pub out_stem: String,
     /// Sample-based sizes by profile index.
     pub measured: HashMap<usize, u64>,
-    measured_sig: (u64, u64, bool, Speed),
+    measured_sig: (u64, u64, bool, Speed, Option<Crop>),
     target_codec: Codec,
 }
 
@@ -74,12 +81,15 @@ impl Video {
             presets,
             choice: Choice::Copy,
             remux_excluded: Vec::new(),
+            crop_on: false,
+            crop: Crop::centered(info.width, info.height, 1, 1),
+            crop_ratio: Some((1, 1)),
             target_mb,
             hardware: cfg!(target_os = "macos"),
             speed: Speed::Balanced,
             out_stem: format!("{stem}_easycat"),
             measured: HashMap::new(),
-            measured_sig: (0, 0, true, Speed::Balanced),
+            measured_sig: (0, 0, true, Speed::Balanced, None),
             target_codec: if has_h265 { Codec::H265 } else { Codec::H264 },
             info,
         }
@@ -110,7 +120,7 @@ impl Video {
     }
 
     fn mode_for(&self, c: Choice) -> Mode {
-        match c {
+        let mode = match c {
             Choice::Copy => Mode::Copy,
             Choice::Remux(c) => {
                 if self.remux_excluded.is_empty() {
@@ -124,12 +134,50 @@ impl Video {
             }
             Choice::Preset(i) => Mode::Transcode(self.settings_for(i)),
             Choice::Target => Mode::Transcode(Settings {
+                crop: None,
                 codec: self.target_codec,
                 container: Container::Mp4,
                 height: None,
                 rate: RateControl::TargetBytes((self.target_mb * 1e6) as u64),
                 hardware: self.hardware,
                 speed: self.speed,
+            }),
+        };
+        if self.crop_on {
+            self.with_crop(mode)
+        } else {
+            mode
+        }
+    }
+
+    /// Cropping always re-encodes. Trim and container change then become a
+    /// high-quality encode; a compression profile keeps its own settings.
+    fn with_crop(&self, mode: Mode) -> Mode {
+        let h265 = self.info.codec == "hevc" && self.target_codec == Codec::H265;
+        let kept = |container| Settings {
+            crop: Some(self.crop),
+            codec: if h265 { Codec::H265 } else { Codec::H264 },
+            container,
+            height: None,
+            // Quality comes first: finer than the compression profiles.
+            rate: RateControl::Crf(if h265 { 24 } else { 20 }),
+            hardware: self.hardware,
+            speed: self.speed,
+        };
+        match mode {
+            Mode::Copy => Mode::Transcode(kept(Container::Mp4)),
+            Mode::Remux(c) | Mode::RemuxSelected { container: c, .. } => {
+                // WebM cannot hold H.264/H.265.
+                let c = if c == Container::Webm {
+                    Container::Mp4
+                } else {
+                    c
+                };
+                Mode::Transcode(kept(c))
+            }
+            Mode::Transcode(s) => Mode::Transcode(Settings {
+                crop: Some(self.crop),
+                ..s
             }),
         }
     }
@@ -146,6 +194,7 @@ impl Video {
             self.end.to_bits(),
             self.hardware,
             self.speed,
+            self.crop_on.then_some(self.crop),
         );
         if sig == self.measured_sig {
             return false;
@@ -159,6 +208,7 @@ impl Video {
         EstimateKey {
             path: self.path.clone(),
             choice: self.choice,
+            crop: self.crop_on.then_some(self.crop),
             start: self.start.to_bits(),
             end: self.end.to_bits(),
             hardware: self.hardware,
@@ -167,7 +217,7 @@ impl Video {
     }
 
     pub fn estimate_is_measured(&self) -> bool {
-        matches!(self.choice, Choice::Preset(i) if self.measured.contains_key(&i))
+        !self.crop_on && matches!(self.choice, Choice::Preset(i) if self.measured.contains_key(&i))
     }
 
     pub fn settings_for(&self, i: usize) -> Settings {
@@ -179,7 +229,7 @@ impl Video {
     }
 
     pub fn estimate_for(&self, c: Choice) -> u64 {
-        if let Choice::Preset(i) = c {
+        if let (Choice::Preset(i), false) = (c, self.crop_on) {
             if let Some(b) = self.measured.get(&i) {
                 return *b;
             }
@@ -209,6 +259,26 @@ impl Video {
     pub fn output_path(&self) -> PathBuf {
         let dir = self.path.parent().map(PathBuf::from).unwrap_or_default();
         dir.join(format!("{}.{}", self.out_stem, self.out_ext()))
+    }
+
+    /// Picks a shape for the crop and fits the largest such rectangle,
+    /// centred. `None` keeps the current rectangle and leaves its shape free.
+    pub fn set_crop_ratio(&mut self, ratio: Option<(u32, u32)>) {
+        self.crop_ratio = ratio;
+        if let Some((w, h)) = ratio {
+            self.crop = Crop::centered(self.info.width, self.info.height, w, h);
+        }
+    }
+
+    /// Whole picture, as before the crop.
+    pub fn reset_crop(&mut self) {
+        self.crop = Crop {
+            x: 0,
+            y: 0,
+            width: self.info.width & !1,
+            height: self.info.height & !1,
+        };
+        self.crop_ratio = None;
     }
 
     pub fn preset_label(&self, i: usize) -> String {
@@ -290,5 +360,121 @@ mod tests {
         assert!(key != video.estimate_key());
         video.speed = Speed::Fast;
         assert!(video.invalidate_stale_measures());
+    }
+
+    fn video_1080(codec: &str, has_h265: bool) -> Video {
+        let json = format!(
+            r#"{{"streams":[{{"codec_type":"video","codec_name":"{codec}","width":1920,"height":1080,"r_frame_rate":"30/1"}},{{"codec_type":"audio","codec_name":"aac"}}],"format":{{"duration":"60","size":"60000000","bit_rate":"8000000"}}}}"#
+        );
+        let info = easycat_core::probe::parse_probe(&json).unwrap();
+        let (tx, _rx) = std::sync::mpsc::channel();
+        Video::new("clip.mp4".into(), info, vec![], tx, has_h265)
+    }
+
+    #[test]
+    fn crop_starts_as_a_centred_square_and_re_encodes_with_high_quality() {
+        let mut video = video_1080("h264", true);
+        video.crop_on = true;
+        let Mode::Transcode(s) = video.mode() else {
+            panic!("crop must transcode");
+        };
+        assert_eq!(
+            s.crop,
+            Some(Crop {
+                x: 420,
+                y: 0,
+                width: 1080,
+                height: 1080
+            })
+        );
+        assert_eq!((s.codec, s.container), (Codec::H264, Container::Mp4));
+        assert_eq!(s.rate, RateControl::Crf(20));
+        assert_eq!(s.height, None);
+    }
+
+    #[test]
+    fn crop_keeps_h265_sources_in_h265_when_available() {
+        let mut video = video_1080("hevc", true);
+        video.crop_on = true;
+        let Mode::Transcode(s) = video.mode() else {
+            panic!("crop must transcode");
+        };
+        assert_eq!((s.codec, s.rate), (Codec::H265, RateControl::Crf(24)));
+        let mut video = video_1080("hevc", false);
+        video.crop_on = true;
+        let Mode::Transcode(s) = video.mode() else {
+            panic!("crop must transcode");
+        };
+        assert_eq!(s.codec, Codec::H264);
+    }
+
+    #[test]
+    fn crop_combines_with_the_trim_selection() {
+        let mut video = video_1080("h264", true);
+        video.start = 10.0;
+        video.end = 25.0;
+        video.crop_on = true;
+        assert_eq!(video.trim().map(|t| t.duration()), Some(15.0));
+        assert!(matches!(video.mode(), Mode::Transcode(_)));
+        assert_eq!(video.out_ext(), "mp4");
+        assert!(video.export_blocker().is_none());
+    }
+
+    #[test]
+    fn crop_is_an_option_that_keeps_the_chosen_operation() {
+        let mut video = video_1080("h264", true);
+        video.set_choice(Choice::Target);
+        video.crop_on = true;
+        let Mode::Transcode(s) = video.mode() else {
+            panic!("compress must transcode");
+        };
+        // The target size survives; only the rectangle is added.
+        assert_eq!(s.crop, Some(video.crop));
+        assert!(matches!(s.rate, RateControl::TargetBytes(_)));
+        video.crop_on = false;
+        assert!(matches!(video.mode(), Mode::Transcode(s) if s.crop.is_none()));
+    }
+
+    #[test]
+    fn crop_with_a_container_change_keeps_the_container_but_never_webm() {
+        let mut video = video_1080("h264", true);
+        video.set_choice(Choice::Remux(Container::Mkv));
+        video.crop_on = true;
+        assert_eq!(video.out_ext(), "mkv");
+        video.set_choice(Choice::Remux(Container::Webm));
+        assert_eq!(video.out_ext(), "mp4");
+    }
+
+    #[test]
+    fn a_smaller_crop_gives_a_smaller_estimate() {
+        let mut video = video_1080("h264", true);
+        video.crop_on = true;
+        video.set_crop_ratio(Some((16, 9)));
+        let wide = video.estimate();
+        video.set_crop_ratio(Some((1, 1)));
+        assert!(video.estimate() < wide);
+    }
+
+    #[test]
+    fn ratios_fit_the_frame_and_reset_restores_the_whole_picture() {
+        let mut video = video_1080("h264", true);
+        video.set_crop_ratio(Some((9, 16)));
+        assert_eq!((video.crop.width, video.crop.height), (606, 1080));
+        video.reset_crop();
+        assert_eq!(video.crop_ratio, None);
+        assert_eq!(
+            (
+                video.crop.x,
+                video.crop.y,
+                video.crop.width,
+                video.crop.height
+            ),
+            (0, 0, 1920, 1080)
+        );
+        // Free keeps whatever rectangle is there.
+        video.set_crop_ratio(Some((1, 1)));
+        let square = video.crop;
+        video.set_crop_ratio(None);
+        assert_eq!(video.crop, square);
     }
 }

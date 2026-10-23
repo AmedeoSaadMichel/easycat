@@ -9,5 +9,5 @@ pub mod presets;
 pub mod probe;
 
 pub use error::{Error, Result};
-pub use job::{Codec, Container, Job, Mode, RateControl, Settings, Speed, Trim};
+pub use job::{Codec, Container, Crop, Job, Mode, RateControl, Settings, Speed, Trim};
 pub use probe::{probe, VideoInfo};

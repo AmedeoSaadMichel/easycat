@@ -142,6 +142,8 @@ fn easycat_layout_keeps_export_accessible() {
         (900, 640, true, false, "easycat-default"),
         (720, 480, true, false, "easycat-small-target"),
         (720, 480, true, false, "easycat-small-copy"),
+        (1280, 840, true, false, "easycat-crop"),
+        (720, 480, true, false, "easycat-small-crop"),
         (720, 480, true, true, "easycat-export"),
         (720, 480, true, false, "easycat-refining"),
         (1280, 840, false, false, "easycat-empty"),
@@ -165,6 +167,9 @@ fn easycat_layout_keeps_export_accessible() {
             video.choice = Choice::Preset(2);
             if name.ends_with("target") {
                 video.set_choice(Choice::Target);
+            }
+            if name.ends_with("crop") {
+                video.crop_on = true;
             }
             if name.ends_with("copy") {
                 video.set_choice(Choice::Copy);

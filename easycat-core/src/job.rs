@@ -75,8 +75,60 @@ impl Speed {
     }
 }
 
+/// A rectangle of the picture to keep, in pixels of the displayed (already
+/// rotated) video, measured from its top-left corner.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Crop {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+impl Crop {
+    /// Largest rectangle of the given aspect ratio that fits, centred.
+    pub fn centered(frame_w: u32, frame_h: u32, ratio_w: u32, ratio_h: u32) -> Crop {
+        let (rw, rh) = (ratio_w.max(1) as u64, ratio_h.max(1) as u64);
+        let (fw, fh) = (frame_w as u64, frame_h as u64);
+        let (w, h) = if fw * rh <= fh * rw {
+            (fw, fw * rh / rw)
+        } else {
+            (fh * rw / rh, fh)
+        };
+        let (w, h) = ((w as u32) & !1, (h as u32) & !1);
+        Crop {
+            x: ((frame_w - w) / 2) & !1,
+            y: ((frame_h - h) / 2) & !1,
+            width: w,
+            height: h,
+        }
+    }
+
+    /// Checks the rectangle against a frame. Encoders need even sizes.
+    pub fn validate(&self, frame_w: u32, frame_h: u32) -> Result<(), String> {
+        if self.width < 16 || self.height < 16 {
+            return Err(format!("crop {}×{} is too small", self.width, self.height));
+        }
+        if [self.width, self.height, self.x, self.y]
+            .iter()
+            .any(|v| v & 1 != 0)
+        {
+            return Err("crop position and size must be even numbers".into());
+        }
+        if self.x + self.width > frame_w || self.y + self.height > frame_h {
+            return Err(format!(
+                "crop {}×{} at {},{} does not fit in {frame_w}×{frame_h}",
+                self.width, self.height, self.x, self.y
+            ));
+        }
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Settings {
+    /// Part of the picture to keep; `None` keeps all of it.
+    pub crop: Option<Crop>,
     pub codec: Codec,
     pub container: Container,
     /// Target height; `None` preserves the original resolution.
@@ -297,5 +349,50 @@ mod tests {
         assert!(validate_remux(&info, Container::Mp4).is_err());
         info.tracks.clear();
         assert!(validate_remux(&info, Container::Mkv).is_err());
+    }
+}
+
+#[cfg(test)]
+mod crop_tests {
+    use super::*;
+
+    #[test]
+    fn centered_crops_fit_and_are_even() {
+        let square = Crop::centered(1920, 1080, 1, 1);
+        assert_eq!(
+            square,
+            Crop {
+                x: 420,
+                y: 0,
+                width: 1080,
+                height: 1080
+            }
+        );
+        let portrait = Crop::centered(1920, 1080, 9, 16);
+        assert_eq!((portrait.width, portrait.height), (606, 1080));
+        assert!(portrait.x.is_multiple_of(2) && portrait.validate(1920, 1080).is_ok());
+        let same = Crop::centered(1920, 1080, 16, 9);
+        assert_eq!(
+            (same.width, same.height, same.x, same.y),
+            (1920, 1080, 0, 0)
+        );
+    }
+
+    #[test]
+    fn validate_rejects_odd_tiny_and_outside_rectangles() {
+        let frame = (1920, 1080);
+        let ok = Crop {
+            x: 10,
+            y: 10,
+            width: 100,
+            height: 100,
+        };
+        assert!(ok.validate(frame.0, frame.1).is_ok());
+        assert!(Crop { width: 101, ..ok }
+            .validate(frame.0, frame.1)
+            .is_err());
+        assert!(Crop { x: 11, ..ok }.validate(frame.0, frame.1).is_err());
+        assert!(Crop { width: 8, ..ok }.validate(frame.0, frame.1).is_err());
+        assert!(Crop { x: 1900, ..ok }.validate(frame.0, frame.1).is_err());
     }
 }

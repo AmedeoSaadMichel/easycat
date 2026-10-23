@@ -25,6 +25,7 @@ fn p(
         name,
         description,
         settings: Settings {
+            crop: None,
             codec,
             container,
             height,

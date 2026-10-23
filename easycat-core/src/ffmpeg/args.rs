@@ -40,7 +40,8 @@ pub fn hardware_encoder(codec: Codec) -> Option<&'static str> {
 pub fn backends(mode: &Mode, info: &VideoInfo) -> Vec<Backend> {
     match mode {
         Mode::Transcode(s) if s.hardware && hardware_encoder(s.codec).is_some() => {
-            if info.bit_depth > 8 {
+            // Hardware frames cannot be cropped: decode on the CPU.
+            if info.bit_depth > 8 && s.crop.is_none() {
                 vec![Backend::Chip, Backend::HardwareEncode, Backend::Software]
             } else {
                 vec![Backend::HardwareEncode, Backend::Software]
@@ -73,6 +74,14 @@ pub(crate) fn input_args(backend: Backend) -> Vec<String> {
 /// Video filter, if needed. Hardware rotation must be applied explicitly:
 /// FFmpeg does not autorotate hardware frames (PSNR-tested for all three rotations).
 pub(crate) fn filter(s: &Settings, info: &VideoInfo, backend: Backend) -> Option<String> {
+    if let Some(c) = s.crop {
+        // CPU filters autorotate first, so the rectangle is in display pixels.
+        let mut parts = vec![format!("crop={}:{}:{}:{}", c.width, c.height, c.x, c.y)];
+        if s.height.is_some_and(|h| h < c.height) {
+            parts.push(format!("scale=-2:{}", s.height.unwrap_or(c.height)));
+        }
+        return Some(parts.join(","));
+    }
     if backend == Backend::Chip {
         let mut parts = Vec::new();
         match info.rotation {
@@ -185,6 +194,10 @@ pub fn build_args(job: &Job, info: &VideoInfo, backend: Backend) -> Result<Vec<S
             a.extend(["-c", "copy", "-f", format].map(String::from));
         }
         Mode::Transcode(s) => {
+            if let Some(c) = s.crop {
+                c.validate(info.width, info.height)
+                    .map_err(Error::BadCrop)?;
+            }
             if let Some(f) = filter(s, info, backend) {
                 a.extend(["-vf".into(), f]);
             }
@@ -220,7 +233,7 @@ pub fn build_args(job: &Job, info: &VideoInfo, backend: Backend) -> Result<Vec<S
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::job::Trim;
+    use crate::job::{Crop, Trim};
     use std::path::PathBuf;
 
     pub(crate) fn info(bit_depth: u8, rotation: u16) -> VideoInfo {
@@ -251,6 +264,7 @@ mod tests {
 
     fn settings(codec: Codec, container: Container, rate: RateControl) -> Settings {
         Settings {
+            crop: None,
             codec,
             container,
             height: None,
@@ -507,5 +521,94 @@ mod tests {
     fn hardware_pipeline_without_transforms_has_no_filters() {
         let s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
         assert_eq!(filter(&s, &info(10, 0), Backend::Chip), None);
+    }
+
+    fn frame(w: u32, h: u32) -> VideoInfo {
+        let mut i = info(8, 0);
+        (i.width, i.height) = (w, h);
+        i
+    }
+
+    #[test]
+    fn crop_filter_keeps_the_chosen_rectangle() {
+        let mut s = settings(Codec::H264, Container::Mp4, RateControl::Crf(22));
+        s.crop = Some(Crop {
+            x: 100,
+            y: 40,
+            width: 1280,
+            height: 720,
+        });
+        assert_eq!(
+            filter(&s, &frame(1920, 1080), Backend::Software).unwrap(),
+            "crop=1280:720:100:40"
+        );
+        // A crop and a smaller height scale the crop, not the whole frame.
+        s.height = Some(480);
+        assert_eq!(
+            filter(&s, &frame(1920, 1080), Backend::Software).unwrap(),
+            "crop=1280:720:100:40,scale=-2:480"
+        );
+    }
+
+    #[test]
+    fn crop_never_uses_the_full_hardware_pipeline() {
+        let mut s = settings(Codec::H265, Container::Mp4, RateControl::Crf(28));
+        s.hardware = true;
+        s.crop = Some(Crop {
+            x: 0,
+            y: 0,
+            width: 1000,
+            height: 1000,
+        });
+        let list = backends(&Mode::Transcode(s), &info(10, 0));
+        assert!(!list.contains(&Backend::Chip));
+        assert_eq!(list.last(), Some(&Backend::Software));
+    }
+
+    #[test]
+    fn crop_is_placed_before_the_encoder_in_the_arguments() {
+        let mut s = settings(Codec::H264, Container::Mp4, RateControl::Crf(22));
+        s.crop = Some(Crop {
+            x: 0,
+            y: 0,
+            width: 1080,
+            height: 1080,
+        });
+        let a = build_args(
+            &job(
+                Some(Trim {
+                    start: 2.0,
+                    end: 6.0,
+                }),
+                Mode::Transcode(s),
+            ),
+            &frame(1920, 1080),
+            Backend::Software,
+        )
+        .unwrap();
+        let vf = a.iter().position(|x| x == "-vf").unwrap();
+        let cv = a.iter().position(|x| x == "-c:v").unwrap();
+        assert!(vf < cv);
+        assert_eq!(a[vf + 1], "crop=1080:1080:0:0");
+        // The trim still applies: both can be combined.
+        assert!(a.windows(2).any(|w| w == ["-ss", "2"]));
+    }
+
+    #[test]
+    fn a_crop_outside_the_frame_is_refused() {
+        let mut s = settings(Codec::H264, Container::Mp4, RateControl::Crf(22));
+        s.crop = Some(Crop {
+            x: 1000,
+            y: 0,
+            width: 1280,
+            height: 720,
+        });
+        let error = build_args(
+            &job(None, Mode::Transcode(s)),
+            &frame(1920, 1080),
+            Backend::Software,
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("does not fit"), "{error}");
     }
 }

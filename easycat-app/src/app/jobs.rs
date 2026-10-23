@@ -98,7 +98,7 @@ impl App {
         }
         if let Some(v) = &self.video {
             if let crate::video::Choice::Preset(i) = v.choice {
-                if !v.measured.contains_key(&i) {
+                if !v.crop_on && !v.measured.contains_key(&i) {
                     self.start_measure(ctx, Some(i));
                 }
             }

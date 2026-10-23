@@ -3,7 +3,7 @@
 use easycat_core::estimate::estimate_bytes;
 use easycat_core::frames::{frame_at, thumb_size};
 use easycat_core::{
-    ffmpeg, presets, probe, Codec, Container, Job, Mode, RateControl, Settings, Speed, Trim,
+    ffmpeg, presets, probe, Codec, Container, Crop, Job, Mode, RateControl, Settings, Speed, Trim,
 };
 use std::path::PathBuf;
 use std::process::Command;
@@ -87,6 +87,7 @@ fn complete_workflow() {
 
     // Sample estimate should approach the actual size with identical settings.
     let s = Settings {
+        crop: None,
         codec: Codec::H264,
         container: Container::Mp4,
         height: None,
@@ -147,6 +148,7 @@ fn complete_workflow() {
     let target = 1_500_000u64;
     let out = input.with_file_name("target.mp4");
     let s = Settings {
+        crop: None,
         codec: Codec::H264,
         container: Container::Mp4,
         height: None,
@@ -232,6 +234,7 @@ fn hardware_pipeline_handles_rotated_10bit_video() {
     );
 
     let settings = |hardware| Settings {
+        crop: None,
         codec: Codec::H265,
         container: Container::Mp4,
         height: Some(480),
@@ -398,6 +401,7 @@ fn stratified_samples_estimate_a_trimmed_export_more_accurately_than_the_heurist
         .success());
     let info = probe(&input).unwrap();
     let settings = Settings {
+        crop: None,
         codec: Codec::H264,
         container: Container::Mp4,
         height: None,
@@ -432,4 +436,37 @@ fn stratified_samples_estimate_a_trimmed_export_more_accurately_than_the_heurist
     assert!(sample_error < 0.15, "sample error={sample_error}");
     assert!(sample_error < rough_error);
     std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn crop_and_trim_can_be_combined() {
+    let Some(input) = clip("crop.mp4") else {
+        eprintln!("FFmpeg unavailable: skipping test");
+        return;
+    };
+    let info = probe(&input).unwrap();
+    let crop = Crop::centered(info.width, info.height, 1, 1);
+    let s = Settings {
+        crop: Some(crop),
+        codec: Codec::H264,
+        container: Container::Mp4,
+        height: None,
+        rate: RateControl::Crf(28),
+        hardware: false,
+        speed: Speed::Fast,
+    };
+    let out = input.with_file_name("cropped.mp4");
+    let job = Job {
+        input: input.clone(),
+        output: out.clone(),
+        trim: Some(Trim {
+            start: 2.0,
+            end: 6.0,
+        }),
+        mode: Mode::Transcode(s),
+    };
+    ffmpeg::run(&job, &info).unwrap();
+    let cropped = probe(&out).unwrap();
+    assert_eq!((cropped.width, cropped.height), (720, 720));
+    assert!((cropped.duration - 4.0).abs() < 0.5, "{}", cropped.duration);
 }

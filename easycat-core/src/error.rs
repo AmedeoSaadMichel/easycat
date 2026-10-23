@@ -22,6 +22,8 @@ pub enum Error {
     OutputIsInput(PathBuf),
     #[error("invalid trim range: {0}")]
     BadRange(String),
+    #[error("invalid crop: {0}")]
+    BadCrop(String),
     #[error("{0}")]
     IncompatibleTracks(String),
     #[error("cancelled")]
